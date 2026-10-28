@@ -21,6 +21,7 @@ local TIPS = {
 function scene:create( event )
 	local grp = self.view
 	require( "lib.lyd" ).spill( "dod" )
+	require( "lib.sjekkpunkt" ).vedDod( require( "lib.ogt_levelmanager" ).currentLevel or 0 )
 	ui.hinne( grp, 0.6 )
 	local p = ui.panel( grp, ui.CX, ui.CY - 10, 520, 300 )
 	ui.tittel( grp, "Ouch!", ui.CX, ui.CY - 122, 50, ui.F.hjerte, ui.F.jordMork )

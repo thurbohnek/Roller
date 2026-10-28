@@ -172,7 +172,7 @@ return {
     -- sjekkpunkter: halens startpunkt i verden (som i banefila, uten
     -- teststart) og samme punkt fra sentrum av flis 1 (til flagget)
     sjekkpunkter = {
-        { x = 12468, y = 4798, lx = 9668, ly = 2887 },
-        { x = 18408, y = 8488, lx = 15608, ly = 6577 },
+        { x = 12150, y = 4682, lx = 9350, ly = 2771 },
+        { x = 17796, y = 8152, lx = 14996, ly = 6241 },
     },
 }

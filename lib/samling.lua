@@ -130,6 +130,7 @@ function M.lag( bane, camera, firkant1, deler )
 
 	-- Sjekkpunktene: et flagg på bakken midt under der marken startes.
 	-- Passerer marken det, er sjekkpunktet nådd (lib/sjekkpunkt.lua).
+	sjekkpunkt.startet( bane )
 	local flagg = {}
 	for i, sp in ipairs( data.sjekkpunkter or {} ) do
 		local g = display.newGroup()

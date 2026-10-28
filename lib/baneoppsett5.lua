@@ -11,7 +11,7 @@ return {
     dod = { x = 10810, y = 6023, rotasjon = 23.41 },
     mal2 = { x = 21620, y = 9599 },
     kamera = { x_maks = 20120, y_maks = 8891 },
-    -- BARE FOR TESTING (sjekkpunkt): marken starter 900 enheter før sjekkpunkt 1.
-    teststart = { x = 7356, y = 3354 },
+    -- BARE FOR TESTING: marken starter der sjekkpunkt 1 er.
+    teststart = { x = 6270, y = 2902 },
     bakgrunn = { rotasjon = 23.94, steg_x = 1827, steg_y = 811 },
 }

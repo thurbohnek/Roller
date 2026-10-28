@@ -32,6 +32,21 @@ function M.sett( bane, i )
 	if not aktiv[bane] or i > aktiv[bane] then aktiv[bane] = i end
 end
 
+-- Når banen sist ble startet fra et sjekkpunkt (system.getTimer()).
+-- Dør marken rett etterpå, er sjekkpunktet ikke trygt, og det glemmes
+-- (se M.vedDod), så spilleren aldri blir fanget i en dødsløkke.
+local startTid = {}
+
+function M.startet( bane )
+	startTid[bane] = aktiv[bane] and system.getTimer() or nil
+end
+
+function M.vedDod( bane )
+	if startTid[bane] and system.getTimer() - startTid[bane] < 3500 then
+		aktiv[bane] = nil
+	end
+end
+
 function M.nullstill( bane )
 	if bane then aktiv[bane] = nil else aktiv = {} end
 end

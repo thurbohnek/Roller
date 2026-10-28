@@ -334,6 +334,10 @@ def plasser(n, vis=False):
         hoyest = min(topp)
         if max(topp) - hoyest > 70:          # for bratt eller ujevnt
             return None
+        # ingen is under marken eller de neste 250 pikslene (marken ville
+        # sklidd rett ut i det vanskelige partiet før spilleren rekker å reagere)
+        if IS[max(0, y - 60):min(H, y + 80), x0:min(W, x1 + 250)].any():
+            return None
         sy = hoyest - 24                     # marken litt over bakken
         if rast[max(0, sy - 40):sy + 10, x0:x1 + 1].any():
             return None                      # tak eller bakke i veien
@@ -347,7 +351,7 @@ def plasser(n, vis=False):
         if sjekkpunkter and lengde[i] - sjekkpunkter[-1][2] < max(3000, total / 4.2):
             continue
         funnet = None
-        for foran in range(350, 1400, 50):
+        for foran in range(700, 2600, 50):
             k = max(0, min(range(len(lengde)), key=lambda q: abs(lengde[q] - (lengde[i] - foran))))
             if any(q in hoppstart for q in range(max(0, k - 30), k + 1)):
                 continue
