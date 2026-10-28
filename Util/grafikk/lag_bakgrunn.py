@@ -140,7 +140,7 @@ def eng_stripe(n, lag, rng):
     """Åser nederst, himmel (gjennomsiktig) over. Sky på det fjerneste laget."""
     b0, b1 = BAND[lag]
     # åstoppen ligger litt inn i båndet, så åsene ses bak banen
-    hoyde = [0.10, 0.17, 0.25][lag - 1]
+    hoyde = [0.0, 0.05, 0.10][lag - 1]
     topp = (b1 - hoyde) * H + periodisk(rng, 2, [60, 80, 100][lag - 1])
     yy = np.arange(H)[:, None]
     fast = yy > topp[None, :]

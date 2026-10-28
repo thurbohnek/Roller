@@ -17,12 +17,14 @@ local grp, innhold, forhandsvisning, draapePille, fane, sveveMark
 local visFane
 
 -- Marken som i banene: hale til høyre, hodet til venstre, hatten på.
-local function lagMark( forelder, x, y, skala, drakt, hatt )
+-- ledd = antall kroppsledd (7 i spillet; færre gir en kortere mark til kortene)
+local function lagMark( forelder, x, y, skala, drakt, hatt, ledd )
+	ledd = ledd or 7
 	local g = display.newGroup()
 	forelder:insert( g )
 	local hale = display.newImageRect( g, opp.drakt( "hale.png", drakt ), 27, 17 )
-	hale.x = 108
-	for i = 1, 7 do
+	hale.x = 108 - 27 * ( 7 - ledd )
+	for i = 7 - ledd + 1, 7 do
 		local d = display.newImageRect( g, opp.drakt( "del1.png", drakt ), 34, 17 )
 		d.x = 108 - 27 * i
 	end
@@ -83,7 +85,7 @@ end
 
 local function evner()
 	for i, e in ipairs( opp.EVNER ) do
-		local y = 170 + ( i - 1 ) * 118
+		local y = 184 + ( i - 1 ) * 118
 		local x = 668
 		local kort = ui.panel( innhold, x, y, 520, 104, { radius = 20 } )
 		ui.ikon( innhold, e.ikon, x - 214, y, 70 )
@@ -91,7 +93,7 @@ local function evner()
 		local maks = #e.pris
 		ui.tekst( innhold, e.navn, x - 166, y - 26, 22, { ankerX = 0 } )
 		local tekst = e.tekst[math.min( niva + 1, maks )]
-		ui.tekst( innhold, tekst, x - 166, y + 4, 15, { ankerX = 0, fet = false, bredde = 230,
+		ui.tekst( innhold, tekst, x - 166, y + 4, 15, { ankerX = 0, fet = false, bredde = 230, juster = "left",
 			farge = ui.F.kremDempet } )
 		-- nivåprikker
 		for n = 1, maks do
@@ -112,12 +114,12 @@ local function utseende( art )
 	local liste = art == "drakt" and opp.DRAKTER or opp.HATTER
 	for i, v in ipairs( liste ) do
 		local kol, rad = ( i - 1 ) % 4, math.floor( ( i - 1 ) / 4 )
-		local x, y = 478 + kol * 128, 196 + rad * 178
+		local x, y = 478 + kol * 128, 218 + rad * 172
 		local valgt = opp.valgt( art ) == v.id
 		local eier = opp.eier( art, v.id )
 		local kort = ui.panel( innhold, x, y, 118, 164, { radius = 18, lys = valgt } )
 		if art == "drakt" then
-			local m = lagMark( innhold, x + 6, y - 40, 0.42, v.id, "ingen" )
+			lagMark( innhold, x + 52, y - 34, 0.95, v.id, "ingen", 3 )
 		else
 			local hode = display.newImageRect( innhold, opp.drakt( "hode.png" ), 30, 25 )
 			hode.x, hode.y = x, y - 30

@@ -28,7 +28,7 @@ local oppdrag = require( "lib.oppdrag" )
 
 local M = {}
 
-local R_DRAAPE = 46      -- fangavstand fra sentrum av et ledd, i enheter
+local R_DRAAPE = 50      -- fangavstand fra sentrum av et ledd, i enheter
 local R_UNGE = 56
 local NAER = 700         -- bare ting nærmere enn dette sjekkes nøye
 
@@ -75,11 +75,11 @@ function M.lag( bane, camera, firkant1, deler )
 		local g = display.newGroup()
 		g.x, g.y = firkant1.x + x, firkant1.y + y
 		if art == "draape" then
-			ui.ikon( g, "draape", 0, 0, 44 )
+			ui.ikon( g, "draape", 0, 0, 58 )
 		else
-			local glod = display.newCircle( g, 0, 0, 46 )
+			local glod = display.newCircle( g, 0, 0, 56 )
 			glod:setFillColor( 1, 0.85, 0.55, 0.28 )
-			ui.ikon( g, "unge", 0, 0, 74 )
+			ui.ikon( g, "unge", 0, 0, 92 )
 			if tidligere[i] then g.alpha = 0.35 end
 		end
 		camera:add( g, 1, false )
