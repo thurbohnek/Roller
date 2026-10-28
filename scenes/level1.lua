@@ -2133,7 +2133,8 @@ checkpoint("level1:cp_2004_after_collision_del9_block")
 
 
     ----------------------------------
-        camera:add (knapp1,2,false)
+        -- pauseknappen ligger i lib/hud.lua sin gruppe (2026-10-28)
+        -- camera:add (knapp1,2,false)
     ----------------------------------
     camera:add (background,6,false)
     ----------------------------------
