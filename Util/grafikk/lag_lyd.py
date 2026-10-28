@@ -5,7 +5,13 @@ ingen lisens å ta vare på.
 
 Kjør fra roten av repoet:   python3 Util/grafikk/lag_lyd.py
 
-Skriver lyd/*.wav (22050 Hz, mono, 16 bit). Brukes av lib/lyd.lua.
+Skriver lyd/*.wav (22050 Hz, mono, 16 bit), også musikken (lyd/musikk.wav).
+Musikken er WAV og ikke mp3 fordi mp3 har en kort stillhet i starten som
+nettleserne ikke alltid fjerner, og da hakker løkka. Brukes av lib/lyd.lua.
+
+Musikken er en rolig speledåse over C - Am - F - G, 96 slag i minuttet,
+16 takter (40 s) som går sømløst i ring: halen av siste takt legges inn
+i begynnelsen.
 """
 import math
 import os
@@ -60,6 +66,58 @@ def note(n):
     return 440 * 2 ** (n / 12)
 
 
+def musikk():
+    rng = np.random.default_rng(8)
+    bpm = 96
+    slag = 60 / bpm
+    takter = 16
+    lengde = int(RATE * slag * 4 * takter)
+    hale = int(RATE * 3)
+    mix = np.zeros(lengde + hale)
+    # akkorder som halvtoner fra A4; grunntone + ters + kvint
+    C, Am, F, G, Dm, Em = (-9, -5, -2), (-12, -9, -5), (-16, -12, -9), (-14, -10, -7), (-7, -4, 0), (-5, -2, 2)
+    gang = [C, Am, F, G, C, Am, Dm, G, F, G, Em, Am, F, G, C, C]
+
+    def legg(s, start):
+        i = int(start * RATE)
+        mix[i:i + len(s)] += s[:len(mix) - i]
+
+    for t, akk in enumerate(gang):
+        t0 = t * 4 * slag
+        # pute: myke, lange akkorder
+        for n in akk:
+            tt = tid(4 * slag + 0.6)
+            pad = (np.sin(2 * math.pi * note(n) * tt) + 0.3 * np.sin(2 * math.pi * note(n) * 2.003 * tt))
+            konv = np.clip(tt / 0.5, 0, 1) * np.clip((4 * slag + 0.6 - tt) / 0.6, 0, 1)
+            legg(pad * konv * 0.10, t0)
+        # bass på slag 1 og 3
+        for b in (0, 2):
+            legg(tone(note(akk[0] - 12), 1.2, demp=3.5, overtoner=(1.0, 0.25)) * 0.35, t0 + b * slag)
+        # speledåse: åttendedeler fra akkordtonene, av og til en pause
+        toner = [akk[0] + 12, akk[1] + 12, akk[2] + 12, akk[1] + 24, akk[0] + 24]
+        monster = [0, 2, 1, 3, 2, 4, 3, 1] if t % 2 == 0 else [4, 3, 2, 1, 2, 0, 1, 2]
+        for e in range(8):
+            if rng.random() < 0.18 and e % 2 == 1:
+                continue
+            n = toner[monster[e]]
+            legg(tone(note(n), 0.9, demp=5.5, overtoner=(1.0, 0.0, 0.18, 0.0, 0.06)) * 0.22, t0 + e * slag / 2)
+        # lett rasling på baktakten
+        for e in range(4):
+            tt = tid(0.08)
+            st = rng.normal(0, 1, len(tt)) * np.exp(-tt * 60)
+            st = np.convolve(st, [1, -1], "same")  # bare diskant
+            legg(st * 0.05, t0 + e * slag + slag / 2)
+    # halen tilbake til starten, så løkka går rundt uten hakk
+    mix[:hale] += mix[lengde:lengde + hale]
+    mix = mix[:lengde]
+    mix = mix / np.abs(mix).max() * 0.7
+    with wave.open(os.path.join(UT, "musikk.wav"), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(RATE)
+        w.writeframes((mix * 32767).astype(np.int16).tobytes())
+
+
 def main():
     os.makedirs(UT, exist_ok=True)
     # knapp: kort, mykt "pop"
@@ -85,6 +143,7 @@ def main():
     lagre("kjop", etter(tone(note(15), 0.1, demp=30), glitter, avstand=0.07), 0.5)
     # gave: stigende glitter
     lagre("gave", etter(*[tone(note(n), 0.25, demp=10) for n in (10, 12, 15, 17, 19, 22, 24)], avstand=0.05), 0.5)
+    musikk()
     print("lyder skrevet til", UT)
 
 

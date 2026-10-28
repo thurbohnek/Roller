@@ -36,4 +36,22 @@ function M.spill( navn )
 	if snd then pcall( audio.play, snd ) end
 end
 
+-- Bakgrunnsmusikken (lyd/musikk.wav, 40 s som går i ring) på kanal 1,
+-- lavere enn effektene. Startes fra main.lua, og når lyden slås på.
+local MUSIKK_KANAL = 1
+local musikk
+audio.reserveChannels( 1 )
+
+function M.musikk()
+	if not innstillinger.lydPaa() then return end
+	if musikk and audio.isChannelActive( MUSIKK_KANAL ) then return end
+	if not musikk then
+		local ok, snd = pcall( audio.loadStream, "lyd/musikk.wav" )
+		if not ok or not snd then return end
+		musikk = snd
+	end
+	audio.setVolume( 0.35, { channel = MUSIKK_KANAL } )
+	pcall( audio.play, musikk, { channel = MUSIKK_KANAL, loops = -1 } )
+end
+
 return M

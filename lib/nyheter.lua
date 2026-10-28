@@ -15,7 +15,7 @@ local M = {}
 
 M.NYHETER = {
 	{ nr = 5, dato = "2026-10-28", linjer = {
-		"Sound effects! Drops chime higher the more you grab in a row.",
+		"Music and sound effects! Drops chime higher the more you grab in a row.",
 		"Worm athletics moved into a new underground arena with a cheering crowd.",
 		"Sparkles when you grab drops and find lost children.",
 	} },

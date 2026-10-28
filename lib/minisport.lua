@@ -171,7 +171,7 @@ local KNAPPER = {
 	["knapp_opp.png"] = { "Bar up", "bla" },
 	["knapp_ned.png"] = { "Bar down", "bla" },
 	["knapp_igjen.png"] = { "Again", "gronn", "igjen" },
-	["knapp_games.png"] = { "Events", "jord", "liste" },
+	["knapp_games.png"] = { "Events", "oransje", "liste" },
 }
 
 function M.knapp( forelder, bilde, x, y, trykk )
@@ -269,7 +269,9 @@ function M.resultat( forelder, linjer, igjen )
 	local g = display.newGroup()
 	forelder:insert( g )
 	local px, py = M.B / 2, M.H / 2 - 10
+	ui.hinne( g, 0.4 )
 	ui.panel( g, px, py, 540, 290 )
+	require( "lib.lyd" ).spill( "mal" )
 	for i, l in ipairs( linjer ) do
 		local f = l[3]
 		if i == 1 then f = f or ui.F.gull end

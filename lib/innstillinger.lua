@@ -27,6 +27,7 @@ function M.byttLyd()
 	data.lyd = not M.lydPaa()
 	data:save()
 	M.brukLyd()
+	if M.lydPaa() then require( "lib.lyd" ).musikk() end
 	return M.lydPaa()
 end
 

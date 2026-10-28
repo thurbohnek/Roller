@@ -1104,9 +1104,21 @@ for alle), og spillet melder hendelser (`draape`, `unge`, `bane`,
 `sport`, `gave`). `scenes/oppdrag.lua` viser dem og deler ut dråpene.
 Hjemmet viser et rødt merke når et oppdrag er klart.
 
-**Gjenstår:** Worm athletics har fortsatt de gamle bakkefargene (marken
-er ny). De gamle scenene og knappebildene som er nevnt over er ikke
-slettet ennå.
+**Lyd:** `Util/grafikk/lag_lyd.py` syntetiserer alle lydene (ingen
+lisens å ta vare på) til `lyd/`. `lib/lyd.lua` spiller dem:
+`lyd.spill( "klikk" | "draape" | "unge" | "mal" | "dod" | "kjop" | "gave" )`.
+Knappelyden kommer fra `ui.trykkbar`, dråpelyden stiger i tone når flere
+tas på rad. Musikken (`lyd/musikk.wav`, 40 s i ring, WAV fordi mp3 hakker
+i løkka i nettleseren) går på kanal 1 og startes fra `main.lua`.
+
+**Worm athletics** bruker ny stil fra `lib/minisport.lua`: arena under
+jorda (`ui/arena_bg.jpg` fra `lag_ui.py`), knapper og tekst fra
+`lib/ui.lua`, og kameraet viser verden i 0,48 (var 0,36), så marken synes
+bedre. Fysikken er uendret.
+
+**Slettet 2026-10-28:** `scenes/menu.lua`, `scenes/chooselevel.lua`,
+`scenes/kontroller.lua`, de gamle knappe- og menybildene og
+`Util/knapper/lag_knapper.py`.
 
 ## Mørket i hulen (2026-09-28)
 
