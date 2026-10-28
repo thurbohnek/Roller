@@ -158,68 +158,192 @@ def normal(rast, x, y):
 
 
 def plasser(n, vis=False):
+    """Legger bladene i mønstre langs veien, ikke jevnt:
+    - buer over hoppene (viser veien gjennom lufta),
+    - korte rekker på bakken med luft imellom,
+    - små klaser i søkk,
+    - gylne blader (verdt 5) høyt over de lengste hoppene,
+    - ungene: en lett i et søkk tidlig, en i toppen av en hoppbue midt i
+      banen (må hoppes riktig), og en mot slutten.
+    Alt i enheter fra sentrum av flis 1."""
     rast, o, fliser, maal = verden(n)
     p = vei(rast, o, maal)
     if len(p) < 50:
         sys.exit("bane %d: fant ingen vei (%d punkter)" % (n, len(p)))
-    # buelengde
+    rng = np.random.default_rng(100 + n)
+    ox, oy = o
+    f1 = fliser[0]
     lengde = [0.0]
     for (a, b), (c, d) in zip(p, p[1:]):
         lengde.append(lengde[-1] + math.hypot(c - a, d - b) * 2)
     total = lengde[-1]
-    ox, oy = o
-    f1 = fliser[0]
 
-    def enheter(i, hoyde):
+    def verdenspunkt(i):
+        x, y = p[i]
+        return x * 2 + ox, y * 2 + oy
+
+    def over_bakken(i, hoyde):
         x, y = p[i]
         nx, ny = normal(rast, x, y)
         if ny > -0.3:            # bratt vegg: rett opp
             nx, ny = 0.0, -1.0
-        ux, uy = x * 2 + ox + nx * hoyde, y * 2 + oy + ny * hoyde
-        return round(ux - f1[0]), round(uy - f1[1])
+        wx, wy = verdenspunkt(i)
+        return wx + nx * hoyde, wy + ny * hoyde
 
-    def indeks(s):
-        return min(range(len(lengde)), key=lambda i: abs(lengde[i] - s))
+    def ledig(x, y, avstand=70):
+        """Ikke oppå andre ting, og ikke inni bakken."""
+        for b in blader + unger:
+            if math.hypot(b[0] - x, b[1] - y) < avstand:
+                return False
+        px, py = int((x - ox) / 2), int((y - oy) / 2)
+        H, W = rast.shape
+        if 0 <= py < H and 0 <= px < W and rast[max(0, py - 8):py + 8, max(0, px - 8):px + 8].any():
+            return False
+        return True
 
-    unger = [enheter(indeks(total * a), UNGE_HOYDE) for a in UNGE_PLASS]
-    draaper = []
-    s = 500
-    while s < total - 200:
-        i = indeks(s)
-        # ikke rett ved en unge
-        if all(abs(lengde[i] - total * a) > 260 for a in UNGE_PLASS):
-            draaper.append(enheter(i, DRAAPE_HOYDE))
-        s += DRAAPE_AVSTAND
-    # målet: fra flis 1 sitt sentrum
+    blader, unger = [], []        # blader: [x, y, verdi]
+
+    # -- hoppene: der veien gjør et sprang
+    hopp = []
+    for i in range(len(p) - 1):
+        a, b = verdenspunkt(i), verdenspunkt(i + 1)
+        if math.hypot(b[0] - a[0], b[1] - a[1]) > 40 and lengde[i] > 300:
+            hopp.append((i, a, b))
+
+    def bue(a, b, t, ekstra=0.0):
+        dx = abs(b[0] - a[0])
+        h = min(260, max(80, 0.3 * dx)) + ekstra
+        x = a[0] + (b[0] - a[0]) * t
+        y = a[1] + (b[1] - a[1]) * t - 4 * h * t * (1 - t) - DRAAPE_HOYDE
+        return x, y
+
+    for i, a, b in hopp:
+        dx = abs(b[0] - a[0])
+        lang = math.hypot(b[0] - a[0], b[1] - a[1])
+        if dx < 60:
+            # smal sprekk: ett blad rett over
+            x, y = bue(a, b, 0.5)
+            if ledig(x, y):
+                blader.append([x, y, 1])
+            continue
+        k = int(min(7, max(3, lang / 130)))
+        for j in range(k):
+            t = 0.12 + 0.76 * j / (k - 1)
+            x, y = bue(a, b, t)
+            if ledig(x, y):
+                blader.append([x, y, 1])
+
+    # -- bakken mellom hoppene: rekker med luft imellom, og klaser i søkk
+    hoppstart = {i for i, _, _ in hopp}
+    # søkk: punkter som ligger lavere enn en rett linje 300 enheter før og etter
+    sokk = []
+    for i in range(len(p)):
+        if lengde[i] < 400 or lengde[i] > total - 300:
+            continue
+        a = next((k for k in range(i, -1, -1) if lengde[i] - lengde[k] >= 300), None)
+        b = next((k for k in range(i, len(p)) if lengde[k] - lengde[i] >= 300), None)
+        if a is None or b is None or any(k in hoppstart for k in range(a, b)):
+            continue
+        ya, yb = verdenspunkt(a)[1], verdenspunkt(b)[1]
+        dyp = verdenspunkt(i)[1] - (ya + yb) / 2
+        if dyp > 45:
+            sokk.append((dyp, i))
+    sokk.sort(reverse=True)
+    valgte_sokk = []
+    for dyp, i in sokk:
+        if all(abs(lengde[i] - lengde[k]) > 900 for k in valgte_sokk):
+            valgte_sokk.append(i)
+    for i in valgte_sokk:
+        x, y = over_bakken(i, DRAAPE_HOYDE)
+        for dx, dy in ((0, 0), (-55, -45), (55, -45), (0, -90)):
+            if ledig(x + dx, y + dy, 45):
+                blader.append([x + dx, y + dy, 1])
+
+    # rekker i ulike former, med varierende (av og til lang) avstand
+    FORMER = ["flat", "bolge", "stigende", "flat", "bolge"]
+    s = 450.0
+    while s < total - 250:
+        form = FORMER[int(rng.integers(0, len(FORMER)))]
+        rekke = int(rng.integers(3, 6))
+        for r in range(rekke):
+            k = min(range(len(lengde)), key=lambda q: abs(lengde[q] - (s + r * 85)))
+            if k in hoppstart or (k - 1) in hoppstart:
+                break
+            if form == "bolge":
+                h = DRAAPE_HOYDE + 45 * (1 - math.cos(r / (rekke - 1) * 2 * math.pi)) / 2
+            elif form == "stigende":
+                h = DRAAPE_HOYDE + 26 * r          # lokker til et lite hopp på slutten
+            else:
+                h = DRAAPE_HOYDE
+            x, y = over_bakken(k, h)
+            if ledig(x, y, 60):
+                blader.append([x, y, 1])
+        s += rekke * 85 + rng.choice([700, 900, 1200, 1600])
+
+    # -- gylne blader over de to lengste hoppene
+    lengst = sorted(hopp, key=lambda h: -abs(h[2][0] - h[1][0]))
+    for i, a, b in lengst[:2]:
+        if abs(b[0] - a[0]) < 200:
+            continue
+        x, y = bue(a, b, 0.5, ekstra=90)
+        blader.append([x, y, 5])
+
+    # -- ungene
+    def naermest(liste, andel, nokkel):
+        return min(liste, key=lambda e: abs(lengde[nokkel(e)] - total * andel)) if liste else None
+
+    def ved(andel):
+        return min(range(len(lengde)), key=lambda k: abs(lengde[k] - total * andel))
+
+    # 1: i et søkk tidlig (eller på bakken ved 28 %)
+    i1 = naermest([k for k in valgte_sokk if lengde[k] < total * 0.5], 0.28, lambda k: k)
+    x, y = over_bakken(i1 if i1 is not None else ved(0.28), UNGE_HOYDE + 40)
+    unger.append([x, y])
+    # 2: i toppen av en hoppbue midt i banen
+    h2 = naermest([h for h in hopp if abs(h[2][0] - h[1][0]) >= 150], 0.6, lambda h: h[0])
+    if h2:
+        x, y = bue(h2[1], h2[2], 0.5, ekstra=30)
+    else:
+        x, y = over_bakken(ved(0.6), UNGE_HOYDE + 60)
+    unger.append([x, y])
+    # 3: mot slutten, høyt over bakken (et lite hopp for å nå den)
+    x, y = over_bakken(ved(0.9), UNGE_HOYDE + 50)
+    unger.append([x, y])
+    # ingen blader oppå ungene
+    blader = [b for b in blader if all(math.hypot(b[0] - u[0], b[1] - u[1]) > 80 for u in unger)]
+
+    def lokal(x, y):
+        return round(x - f1[0]), round(y - f1[1])
+
     with open("lib/samle%d.lua" % n, "w", encoding="utf-8") as f:
         f.write("-- Generert av Util/grafikk/lag_samling.py %d. Ikke rediger for hånd.\n" % n)
-        f.write("-- Dråper og markeunger i bane %d, i enheter fra sentrum av flis 1.\n" % n)
-        f.write("-- Veien er %d enheter lang.\n" % total)
-        f.write("return {\n    draaper = {\n")
-        for x, y in draaper:
-            f.write("        { %d, %d },\n" % (x, y))
+        f.write("-- Blader og markeunger i bane %d, i enheter fra sentrum av flis 1.\n" % n)
+        f.write("-- blader: { x, y, verdi } (verdi 5 = gyllent blad). Veien er %d enheter lang.\n" % total)
+        f.write("return {\n    blader = {\n")
+        for x, y, v in blader:
+            f.write("        { %d, %d, %d },\n" % (lokal(x, y) + (v,)))
         f.write("    },\n    unger = {\n")
         for x, y in unger:
-            f.write("        { %d, %d },\n" % (x, y))
+            f.write("        { %d, %d },\n" % lokal(x, y))
         f.write("    },\n}\n")
-    print("bane %d: vei %d enheter, %d dråper, 3 unger" % (n, total, len(draaper)))
+    sum_verdi = sum(b[2] for b in blader)
+    print("bane %d: vei %d enheter, %d hopp, %d blader (verdi %d), %d søkk" % (
+        n, total, len(hopp), len(blader), sum_verdi, len(valgte_sokk)))
 
     if vis:
         sk = 8
-        H, W = rast.shape
         im = Image.fromarray((rast[::sk, ::sk] * 150).astype(np.uint8)).convert("RGB")
         d = ImageDraw.Draw(im)
         d.line([(x / sk, y / sk) for x, y in p], fill=(255, 200, 0), width=1)
-        for x, y in draaper:
-            px, py = (x + f1[0] - ox) / 2 / sk, (y + f1[1] - oy) / 2 / sk
-            d.ellipse((px - 2, py - 2, px + 2, py + 2), fill=(80, 200, 255))
+        for x, y, v in blader:
+            px, py = (x - ox) / 2 / sk, (y - oy) / 2 / sk
+            r = 4 if v > 1 else 2
+            d.ellipse((px - r, py - r, px + r, py + r), fill=(255, 215, 0) if v > 1 else (90, 220, 90))
         for x, y in unger:
-            px, py = (x + f1[0] - ox) / 2 / sk, (y + f1[1] - oy) / 2 / sk
+            px, py = (x - ox) / 2 / sk, (y - oy) / 2 / sk
             d.ellipse((px - 5, py - 5, px + 5, py + 5), fill=(255, 100, 160))
         mx, my = (maal[0] - ox) / 2 / sk, (maal[1] - oy) / 2 / sk
         d.line([(mx + 132, my - 132), (mx - 132, my + 132)], fill=(0, 255, 0), width=2)
-        sx, sy = -ox / 2 / sk, -oy / 2 / sk
-        d.ellipse((sx - 4, sy - 4, sx + 4, sy + 4), fill=(255, 0, 0))
         return im
 
 

@@ -14,6 +14,12 @@ local GGData = require( "lib.GGData" )
 local M = {}
 
 M.NYHETER = {
+	{ nr = 6, dato = "2026-10-28", linjer = {
+		"Leaves instead of dew drops! Worms really drag leaves home to eat.",
+		"Leaves now trace the jumps in arcs, and golden leaves hide high above the big gaps.",
+		"Calm nature sounds instead of music: birds on the meadow, dripping caves below.",
+		"Lost children you find follow you to the end of the level.",
+	} },
 	{ nr = 5, dato = "2026-10-28", linjer = {
 		"Music and sound effects! Drops chime higher the more you grab in a row.",
 		"Worm athletics moved into a new underground arena with a cheering crowd.",

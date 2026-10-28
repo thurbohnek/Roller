@@ -26,7 +26,6 @@ end
 -- scenes.chooselevel (banevalg) når den trykkes.
 -- Lyd av/på fra Settings-skjermen, lagret mellom hver gang spillet startes.
 require( "lib.innstillinger" ).brukLyd()
-require( "lib.lyd" ).musikk()
 
 composer.gotoScene( "scenes.gotomenu" )
 -- Varsel nede i hjørnet når en ny versjon er publisert (lib/oppdatering.lua).

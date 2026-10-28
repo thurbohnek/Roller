@@ -52,7 +52,7 @@ tegn = function()
 		if o.hentet then
 			ui.tekst( innhold, "Done", x + 270, y, 22, { farge = ui.F.lilla } )
 		elseif ferdig then
-			local k = ui.knapp( innhold, { tekst = "+" .. o.lonn, ikon = "draape", x = x + 262, y = y, bredde = 130,
+			local k = ui.knapp( innhold, { tekst = "+" .. o.lonn, ikon = "blad", x = x + 262, y = y, bredde = 130,
 				hoyde = 52, storrelse = 22, trykk = function()
 					if oppdrag.hent( i ) then
 						require( "lib.lyd" ).spill( "kjop" )
@@ -62,8 +62,8 @@ tegn = function()
 			transition.to( k, { tag = "oppdrag", time = 600, xScale = 1.07, yScale = 1.07, iterations = 0,
 				transition = easing.continuousLoop } )
 		else
-			ui.ikon( innhold, "draape", x + 236, y, 34 )
-			ui.tekst( innhold, "+" .. o.lonn, x + 256, y - 1, 22, { ankerX = 0, farge = ui.F.draape } )
+			ui.ikon( innhold, "blad", x + 236, y, 34 )
+			ui.tekst( innhold, "+" .. o.lonn, x + 256, y - 1, 22, { ankerX = 0, farge = ui.F.blad } )
 		end
 	end
 	ui.tekst( innhold, tidIgjen(), ui.CX, 520, 18, { farge = ui.F.kremDempet, fet = false } )
@@ -75,8 +75,8 @@ function scene:create( event )
 	bg.fill = ui.gradient( ui.F.jordLys, ui.F.jordMork )
 	ui.rundKnapp( grp, "tilbake", ui.VENSTRE + 40, 36, 56, function() nav.gaaTil( "scenes.gotomenu" ) end )
 	ui.tittel( grp, "Weekly quests", ui.CX, 40, 40, ui.F.krem, ui.F.jord )
-	draapePille = ui.pille( grp, "draape", ui.HOYRE - 92, 36, 150, tostring( framgang.draaper() ), true )
-	ui.tekst( grp, "Finish quests to earn dew drops.", ui.CX, 92, 18, { farge = ui.F.kremDempet, fet = false } )
+	draapePille = ui.pille( grp, "blad", ui.HOYRE - 92, 36, 150, tostring( framgang.draaper() ), true )
+	ui.tekst( grp, "Finish quests to earn leaves.", ui.CX, 92, 18, { farge = ui.F.kremDempet, fet = false } )
 	tegn()
 end
 

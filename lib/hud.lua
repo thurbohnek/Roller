@@ -66,6 +66,7 @@ function M.pauseKnapp( k )
 end
 
 function M.bane( n )
+	require( "lib.lyd" ).bakgrunn( n <= 2 and "eng" or "hule" )
 	local h = M.gruppe()
 	local g = display.newGroup()
 	h:insert( g )

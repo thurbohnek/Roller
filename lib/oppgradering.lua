@@ -30,10 +30,10 @@ local function lagre() data:save() end
 
 -- pris per nivå; tekst per nivå
 M.EVNER = {
-	{ id = "magnet", navn = "Dew Magnet", ikon = "magnet", pris = { 120, 300 },
-		tekst = { "Grab drops from further away.", "Grab drops from much further away." } },
+	{ id = "magnet", navn = "Leaf Magnet", ikon = "magnet", pris = { 120, 300 },
+		tekst = { "Grab leaves from further away.", "Grab leaves from much further away." } },
 	{ id = "flaks", navn = "Lucky Clover", ikon = "klover", pris = { 150, 350 },
-		tekst = { "1 in 6 drops counts double.", "1 in 3 drops counts double." } },
+		tekst = { "1 in 6 leaves counts double.", "1 in 3 leaves counts double." } },
 	{ id = "radar", navn = "Family Radar", ikon = "radar", pris = { 250 },
 		tekst = { "An arrow by your worm points to the nearest lost child." } },
 }

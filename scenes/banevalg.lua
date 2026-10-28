@@ -82,6 +82,7 @@ end
 function scene:create( event )
 	local grp = self.view
 	ui.bakgrunn( grp, "ui/banevalg_bg.jpg" )
+	require( "lib.lyd" ).bakgrunn( "eng" )
 
 	-- en liten mark ved neste bane som venter
 	local neste = 1
@@ -102,7 +103,7 @@ function scene:create( event )
 	-- topplinje
 	ui.rundKnapp( grp, "tilbake", ui.VENSTRE + 40, 36, 56, function() nav.gaaTil( "scenes.gotomenu" ) end )
 	ui.tittel( grp, "Choose a level", ui.CX, 40, 34, ui.F.krem, ui.F.jord )
-	ui.pille( grp, "draape", ui.HOYRE - 92, 36, 150, tostring( framgang.draaper() ), true )
+	ui.pille( grp, "blad", ui.HOYRE - 92, 36, 150, tostring( framgang.draaper() ), true )
 	local t = ui.pille( grp, "unge", ui.HOYRE - 92, 96, 150,
 		framgang.totaltUnger() .. "/" .. ( framgang.BANER * 3 ), true )
 

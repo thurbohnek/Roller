@@ -107,10 +107,10 @@ local function visGave( forelder, gave )
 			f:setFillColor( ui.F.jordMork[1], ui.F.jordMork[2], ui.F.jordMork[3], d < gave.dag and 0.35 or 0.75 )
 		end
 		ui.tekst( g, "Day " .. d, x, ui.CY - 36, 14, { farge = ui.F.kremDempet } )
-		ui.ikon( g, "draape", x, ui.CY - 6, 30 )
+		ui.ikon( g, "blad", x, ui.CY - 6, 30 )
 		ui.tekst( g, tostring( framgang.GAVER[d] ), x, ui.CY + 24, 16 )
 	end
-	local hent = ui.knapp( g, { tekst = "Collect " .. gave.draaper, ikon = "draape", x = ui.CX, y = ui.CY + 112,
+	local hent = ui.knapp( g, { tekst = "Collect " .. gave.draaper, ikon = "blad", x = ui.CX, y = ui.CY + 112,
 		bredde = 260, hoyde = 62, trykk = function()
 			framgang.hentGave()
 			require( "lib.oppdrag" ).hendelse( "gave", 1 )
@@ -136,6 +136,7 @@ function scene:create( event )
 	local grp = self.view
 
 	ui.bakgrunn( grp, "ui/hjem_bg.jpg" )
+	require( "lib.lyd" ).bakgrunn( "eng" )
 
 	-- tittel på himmelen
 	ui.tittel( grp, "Roller", ui.CX, 62, 64, ui.F.krem, ui.F.jord )
@@ -187,7 +188,7 @@ function scene:create( event )
 	end
 
 	-- topplinje
-	draapePille = ui.pille( grp, "draape", ui.VENSTRE + 92, 36, 150, tostring( framgang.draaper() ), true )
+	draapePille = ui.pille( grp, "blad", ui.VENSTRE + 92, 36, 150, tostring( framgang.draaper() ), true )
 	ui.rundKnapp( grp, "tannhjul", ui.HOYRE - 40, 36, 56, function() nav.gaaTil( "scenes.innstillinger" ) end )
 	ui.rundKnapp( grp, "hjelp", ui.HOYRE - 108, 36, 56, function()
 		require( "lib.kontroller" ).vis( grp )

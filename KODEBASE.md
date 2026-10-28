@@ -1104,12 +1104,25 @@ for alle), og spillet melder hendelser (`draape`, `unge`, `bane`,
 `sport`, `gave`). `scenes/oppdrag.lua` viser dem og deler ut dråpene.
 Hjemmet viser et rødt merke når et oppdrag er klart.
 
+**Blader i stedet for dråper (2026-10-28, etter Mathias):** pengene er
+blader (meitemark drar blader ned i gangene sine). Ikon `ui/blad.png` og
+`ui/blad_gull.png` (verdt 5) fra `lag_ui.py`. I koden og lagringen heter
+det fortsatt `draaper`/`draape`, så gamle lagringer virker.
+`lib/samleN.lua` har nå `blader = { { x, y, verdi }, ... }`, lagt i
+mønstre av `lag_samling.py`: buer over hoppene, rekker (flate, bølge,
+stigende) med varierende avstand, klaser i søkk og gylne blader høyt over
+de to lengste hoppene. Unge 1 i et søkk tidlig, unge 2 i toppen av en
+hoppbue midt i banen, unge 3 høyt mot slutten. Funne unger følger etter
+marken resten av banen (bare grafikk).
+
 **Lyd:** `Util/grafikk/lag_lyd.py` syntetiserer alle lydene (ingen
 lisens å ta vare på) til `lyd/`. `lib/lyd.lua` spiller dem:
 `lyd.spill( "klikk" | "draape" | "unge" | "mal" | "dod" | "kjop" | "gave" )`.
 Knappelyden kommer fra `ui.trykkbar`, dråpelyden stiger i tone når flere
-tas på rad. Musikken (`lyd/musikk.wav`, 40 s i ring, WAV fordi mp3 hakker
-i løkka i nettleseren) går på kanal 1 og startes fra `main.lua`.
+tas på rad. Musikken ble tatt bort etter tilbakemelding (plagsom); i stedet
+er det naturlyder i bakgrunnen: `lyd.bakgrunn( "eng" | "hule" )`
+(`lyd/stemning_*.wav`, 11025 Hz, krysstonet løkke), på kanal 1, med egen
+av/på-knapp i Settings (`innstillinger.naturPaa`).
 
 **Worm athletics** bruker ny stil fra `lib/minisport.lua`: arena under
 jorda (`ui/arena_bg.jpg` fra `lag_ui.py`), knapper og tekst fra

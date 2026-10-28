@@ -27,8 +27,32 @@ function M.byttLyd()
 	data.lyd = not M.lydPaa()
 	data:save()
 	M.brukLyd()
-	if M.lydPaa() then require( "lib.lyd" ).musikk() end
-	return M.lydPaa()
+	require( "lib.lyd" ).oppdaterBakgrunn()
+	-- Naturlydene i bakgrunnen (vind, fugler, drypp), av/på for seg.
+function M.naturPaa()
+	return data.natur ~= false
+end
+
+function M.byttNatur()
+	data.natur = not M.naturPaa()
+	data:save()
+	require( "lib.lyd" ).oppdaterBakgrunn()
+	return M.naturPaa()
+end
+
+return M.lydPaa()
+end
+
+-- Naturlydene i bakgrunnen (vind, fugler, drypp), av/på for seg.
+function M.naturPaa()
+	return data.natur ~= false
+end
+
+function M.byttNatur()
+	data.natur = not M.naturPaa()
+	data:save()
+	require( "lib.lyd" ).oppdaterBakgrunn()
+	return M.naturPaa()
 end
 
 return M

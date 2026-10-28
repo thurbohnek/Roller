@@ -18,26 +18,42 @@ function scene:create( event )
 	ui.tittel( grp, "Settings", ui.CX, ui.CY - 150, 42 )
 
 	-- lyd
-	local lydKnapp
+	local lydKnapp, tegnNatur
 	local function tegnLyd()
 		if lydKnapp then display.remove( lydKnapp ) end
 		local paa = innstillinger.lydPaa()
 		lydKnapp = ui.knapp( grp, { tekst = paa and "Sound: On" or "Sound: Off", ikon = paa and "lyd" or "lydAv",
-			x = ui.CX, y = ui.CY - 68, bredde = 300, hoyde = 62, farge = paa and "gronn" or "gra",
+			x = ui.CX, y = ui.CY - 92, bredde = 320, hoyde = 58, farge = paa and "gronn" or "gra",
 			trykk = function()
 				innstillinger.byttLyd()
 				tegnLyd()
+				tegnNatur()
+			end } )
+	end
+
+	-- naturlydene i bakgrunnen (vind, fugler, drypp), av/på for seg
+	local naturKnapp
+	function tegnNatur()
+		if naturKnapp then display.remove( naturKnapp ) end
+		local paa = innstillinger.naturPaa()
+		naturKnapp = ui.knapp( grp, { tekst = paa and "Nature sounds: On" or "Nature sounds: Off",
+			ikon = paa and "lyd" or "lydAv", x = ui.CX, y = ui.CY - 24, bredde = 320, hoyde = 58,
+			farge = ( paa and innstillinger.lydPaa() ) and "gronn" or "gra", storrelse = 22,
+			trykk = function()
+				innstillinger.byttNatur()
+				tegnNatur()
 			end } )
 	end
 	tegnLyd()
+	tegnNatur()
 
-	ui.knapp( grp, { tekst = "How to move", ikon = "hjelp", x = ui.CX, y = ui.CY + 10, bredde = 300, hoyde = 62,
+	ui.knapp( grp, { tekst = "How to move", ikon = "hjelp", x = ui.CX, y = ui.CY + 44, bredde = 320, hoyde = 58,
 		farge = "bla", trykk = function() require( "lib.kontroller" ).vis( grp ) end } )
 
-	ui.tekst( grp, "Font: Fredoka (SIL Open Font License)", ui.CX, ui.CY + 92, 14,
+	ui.tekst( grp, "Font: Fredoka (SIL Open Font License)", ui.CX, ui.CY + 104, 14,
 		{ farge = ui.F.kremDempet, fet = false } )
 
-	ui.knapp( grp, { tekst = "Back", ikon = "tilbake", x = ui.CX, y = ui.CY + 166, bredde = 200, hoyde = 56,
+	ui.knapp( grp, { tekst = "Back", ikon = "tilbake", x = ui.CX, y = ui.CY + 162, bredde = 200, hoyde = 56,
 		farge = "oransje", trykk = function() nav.gaaTil( "scenes.gotomenu" ) end } )
 end
 

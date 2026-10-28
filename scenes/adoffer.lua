@@ -63,13 +63,13 @@ function scene:create( event )
 		bredde = 380, hoyde = 62, farge = "bla", trykk = function() visReklame( grp, LANG ) end } )
 
 	local har = framgang.draaper() >= DRAAPE_PRIS
-	ui.knapp( grp, { tekst = DRAAPE_PRIS .. " drops: +" .. DRAAPE_FORSOK .. " tries", ikon = "draape",
+	ui.knapp( grp, { tekst = DRAAPE_PRIS .. " leaves: +" .. DRAAPE_FORSOK .. " tries", ikon = "blad",
 		x = ui.CX, y = ui.CY + 88, bredde = 380, hoyde = 62, farge = har and "oransje" or "gra",
 		trykk = function()
 			if framgang.bruk( DRAAPE_PRIS ) then giForsok( DRAAPE_FORSOK ) end
 		end } )
 	if not har then
-		ui.tekst( grp, "You have " .. framgang.draaper() .. " drops", ui.CX, ui.CY + 128, 14,
+		ui.tekst( grp, "You have " .. framgang.draaper() .. " leaves", ui.CX, ui.CY + 128, 14,
 			{ farge = ui.F.kremDempet, fet = false } )
 	end
 

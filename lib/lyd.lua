@@ -4,7 +4,7 @@
 --     require( "lib.lyd" ).spill( "klikk" )
 --
 -- Navn: klikk, draape, unge, mal, dod, kjop, gave.
--- "draape" stiger i tone når flere dråper tas like etter hverandre.
+-- "draape" (et blad) stiger i tone når flere tas like etter hverandre.
 -- Lyden av/på styres av lib/innstillinger.lua (audio.setVolume), men
 -- sjekkes også her så ingenting lastes når lyden er av.
 
@@ -36,22 +36,41 @@ function M.spill( navn )
 	if snd then pcall( audio.play, snd ) end
 end
 
--- Bakgrunnsmusikken (lyd/musikk.wav, 40 s som går i ring) på kanal 1,
--- lavere enn effektene. Startes fra main.lua, og når lyden slås på.
-local MUSIKK_KANAL = 1
-local musikk
+-- Naturlyder i bakgrunnen (ikke musikk): "eng" (vind og fugler) og "hule"
+-- (dyp tone og drypp), filene lyd/stemning_*.wav som går i ring. Spilles på
+-- kanal 1, lavere enn effektene. Kan slås av for seg (innstillinger.
+-- naturPaa), og følger også den vanlige lydknappen.
+--     lyd.bakgrunn( "eng" )   -- hjemmet, banevalget, bane 1-2
+--     lyd.bakgrunn( "hule" )  -- bane 3-9 og Worm athletics
+local KANAL = 1
+local lastetStemning = {}
+local naa
 audio.reserveChannels( 1 )
 
-function M.musikk()
-	if not innstillinger.lydPaa() then return end
-	if musikk and audio.isChannelActive( MUSIKK_KANAL ) then return end
-	if not musikk then
-		local ok, snd = pcall( audio.loadStream, "lyd/musikk.wav" )
-		if not ok or not snd then return end
-		musikk = snd
+function M.bakgrunn( navn )
+	if navn then naa = navn end
+	if not naa then return end
+	if not ( innstillinger.lydPaa() and innstillinger.naturPaa() ) then
+		audio.stop( KANAL )
+		return
 	end
-	audio.setVolume( 0.35, { channel = MUSIKK_KANAL } )
-	pcall( audio.play, musikk, { channel = MUSIKK_KANAL, loops = -1 } )
+	if M.spiller == naa and audio.isChannelActive( KANAL ) then return end
+	if lastetStemning[naa] == nil then
+		local ok, snd = pcall( audio.loadStream, "lyd/stemning_" .. naa .. ".wav" )
+		lastetStemning[naa] = ok and snd or false
+	end
+	local snd = lastetStemning[naa]
+	if not snd then return end
+	audio.stop( KANAL )
+	audio.setVolume( 0.5, { channel = KANAL } )
+	pcall( audio.play, snd, { channel = KANAL, loops = -1, fadein = 1200 } )
+	M.spiller = naa
+end
+
+-- Kalles når lyd eller naturlyder slås av eller på.
+function M.oppdaterBakgrunn()
+	M.spiller = nil
+	M.bakgrunn()
 end
 
 return M

@@ -367,6 +367,44 @@ def pose():
     ferdig(im, "pose")
 
 
+def blad(gull=False):
+    """Pengene i spillet: et blad (meitemark drar blader ned i gangene sine
+    for å spise dem). gull=True: gyllent blad, verdt 5."""
+    im = lerret()
+    d = ImageDraw.Draw(im)
+    if gull:
+        lys, mid, mork, nerve = hexf("FFE58A"), hexf("FFC53D"), hexf("C9901E"), hexf("FFF4C8")
+    else:
+        lys, mid, mork, nerve = hexf("9BE07A"), hexf("5BBF5A"), hexf("2F8A3E"), hexf("D8F5C0")
+    # bladform: to buer mellom stilk og spiss, litt på skrå
+    cx, cy = p(0.5), p(0.48)
+    vinkel = math.radians(-35)
+    def rot(x, y):
+        return (cx + x * math.cos(vinkel) - y * math.sin(vinkel), cy + x * math.sin(vinkel) + y * math.cos(vinkel))
+    pts = []
+    for t in np.linspace(0, math.pi, 60):
+        pts.append(rot(-p(0.36) * math.cos(t), -p(0.2) * math.sin(t) ** 0.9))
+    for t in np.linspace(math.pi, 0, 60):
+        pts.append(rot(-p(0.36) * math.cos(t), p(0.2) * math.sin(t) ** 0.9))
+    d.polygon(pts, fill=mork)
+    indre = [(cx + (x - cx) * 0.86, cy + (y - cy) * 0.86) for x, y in pts]
+    d.polygon(indre, fill=mid)
+    # lys halvdel
+    halv = [rot(-p(0.36) * math.cos(t) * 0.86, -p(0.2) * math.sin(t) ** 0.9 * 0.86) for t in np.linspace(0, math.pi, 60)]
+    d.polygon(halv + [rot(p(0.31), 0)], fill=lys)
+    # midtnerve og sidenerver
+    d.line([rot(-p(0.44), 0), rot(p(0.3), 0)], fill=nerve, width=int(p(0.025)))
+    d.line([rot(-p(0.44), 0), rot(-p(0.36), 0)], fill=mork, width=int(p(0.04)))   # stilk
+    for x in (-0.18, -0.04, 0.1):
+        for sy in (-1, 1):
+            d.line([rot(p(x), 0), rot(p(x + 0.1), sy * p(0.12))], fill=nerve, width=int(p(0.016)))
+    if gull:
+        for gx, gy, r in ((0.78, 0.22, 0.05), (0.22, 0.8, 0.035)):
+            d.polygon([(p(gx), p(gy - r * 2)), (p(gx + r * 0.5), p(gy)), (p(gx), p(gy + r * 2)), (p(gx - r * 0.5), p(gy))], fill=HVIT)
+            d.polygon([(p(gx - r * 2), p(gy)), (p(gx), p(gy - r * 0.5)), (p(gx + r * 2), p(gy)), (p(gx), p(gy + r * 0.5))], fill=HVIT)
+    ferdig(im, "blad_gull" if gull else "blad")
+
+
 def pauseknapp():
     """pauseknapp.png i roten (knapp1 i banefilene): rund jordknapp med
     pause-ikon, samme stil som ui.rundKnapp. 150 x 150."""
@@ -393,8 +431,9 @@ def main():
     os.makedirs(UT, exist_ok=True)
     pauseknapp()
     for f in (draape, hjerte, unge, unge_tom, pause, spill, tilbake, igjen, hjem, liste, tannhjul,
-              laas, stjerne, hake, gave, hjelp, magnet, klover, radar, flagg, pose):
+              laas, stjerne, hake, gave, hjelp, magnet, klover, radar, flagg, pose, blad):
         f()
+    blad(gull=True)
     lyd(False)
     lyd(True)
     print("ikoner skrevet til", UT)

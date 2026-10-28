@@ -71,10 +71,10 @@ local function kjopt()
 end
 
 local function kjopKnapp( forelder, x, y, b, pris, kjop )
-	return ui.knapp( forelder, { tekst = tostring( pris ), ikon = "draape", x = x, y = y, bredde = b, hoyde = 44,
+	return ui.knapp( forelder, { tekst = tostring( pris ), ikon = "blad", x = x, y = y, bredde = b, hoyde = 44,
 		farge = "oransje", storrelse = 20, trykk = function()
 			if framgang.draaper() < pris then
-				melding( "Not enough dew drops yet" )
+				melding( "Not enough leaves yet" )
 				return
 			end
 			if kjop() then
@@ -180,7 +180,7 @@ function scene:create( event )
 
 	ui.rundKnapp( grp, "tilbake", ui.VENSTRE + 40, 36, 56, function() nav.gaaTil( "scenes.gotomenu" ) end )
 	ui.tittel( grp, "Shop", ui.CX, 40, 40, ui.F.krem, ui.F.jord )
-	draapePille = ui.pille( grp, "draape", ui.HOYRE - 92, 36, 150, tostring( framgang.draaper() ), true )
+	draapePille = ui.pille( grp, "blad", ui.HOYRE - 92, 36, 150, tostring( framgang.draaper() ), true )
 
 	ui.panel( grp, 222, 300, 340, 300, { radius = 26 } )
 	ui.tekst( grp, "Your worm", 222, 182, 22, { farge = ui.F.kremDempet } )

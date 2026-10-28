@@ -49,6 +49,7 @@ end
 -- Util/grafikk/lag_ui.py), tre bilder etter hverandre som ruller sakte
 -- bak banen: kall bg:rull( kameraX ) hvert bilde.
 function M.bakgrunn( forelder )
+	require( "lib.lyd" ).bakgrunn( "hule" )
 	local g = display.newGroup()
 	forelder:insert( g )
 	-- dekker hele skjermhøyden, også på skjermer som er høyere enn 16:9

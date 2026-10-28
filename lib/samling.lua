@@ -1,4 +1,5 @@
--- Dråper og markeunger i banene (lagt til 2026-10-28).
+-- Blader og markeunger i banene (lagt til 2026-10-28; bladene var
+-- dråper i første versjon, derfor heter mye i koden fortsatt "draape").
 --
 -- Posisjonene står i lib/samleN.lua (lages av Util/grafikk/lag_samling.py),
 -- i enheter fra sentrum av flis 1, så de følger banen også med teststart.
@@ -49,7 +50,7 @@ local function hudRad( bane, tidligere )
 	flate:setFillColor( ui.F.jord[1], ui.F.jord[2], ui.F.jord[3], 0.8 )
 	flate.strokeWidth = 3
 	flate:setStrokeColor( unpack( ui.F.kant ) )
-	ui.ikon( g, "draape", x - 60, y, 30 )
+	ui.ikon( g, "blad", x - 60, y, 30 )
 	local tall = ui.tekst( g, "0", x - 38, y - 1, 20, { ankerX = 0 } )
 	local plasser = {}
 	for i = 1, 3 do
@@ -72,11 +73,17 @@ function M.lag( bane, camera, firkant1, deler )
 	local holder = display.newGroup()      -- for å vite når banen rives
 	camera:add( holder, 1, false )
 
-	local function legg( x, y, art, i )
+	local function legg( x, y, art, i, verdi )
 		local g = display.newGroup()
 		g.x, g.y = firkant1.x + x, firkant1.y + y
-		if art == "draape" then
-			ui.ikon( g, "draape", 0, 0, 58 )
+		if art == "draape" and ( verdi or 1 ) > 1 then
+			-- gyllent blad: større, med glød
+			local glod = display.newCircle( g, 0, 0, 52 )
+			glod:setFillColor( 1, 0.85, 0.3, 0.3 )
+			ui.ikon( g, "bladGull", 0, 0, 84 )
+		elseif art == "draape" then
+			ui.ikon( g, "blad", 0, 0, 58 )
+			g.rotation = math.random( -25, 25 )
 		else
 			local glod = display.newCircle( g, 0, 0, 56 )
 			glod:setFillColor( 1, 0.85, 0.55, 0.28 )
@@ -84,10 +91,11 @@ function M.lag( bane, camera, firkant1, deler )
 			if tidligere[i] then g.alpha = 0.35 end
 		end
 		camera:add( g, 1, false )
-		ting[#ting + 1] = { obj = g, art = art, i = i, x = g.x, y = g.y,
-			fase = math.random() * 6.28 }
+		ting[#ting + 1] = { obj = g, art = art, i = i, x = g.x, y = g.y, verdi = verdi or 1,
+			rot = g.rotation, fase = math.random() * 6.28 }
 	end
-	for _, p in ipairs( data.draaper or {} ) do legg( p[1], p[2], "draape" ) end
+	-- bladene: { x, y, verdi } (verdi 5 = gyllent blad)
+	for _, p in ipairs( data.blader or data.draaper or {} ) do legg( p[1], p[2], "draape", nil, p[3] ) end
 	for i, p in ipairs( data.unger or {} ) do legg( p[1], p[2], "unge", i ) end
 
 	local rDraape = R_DRAAPE * oppgradering.magnetFaktor()
@@ -98,7 +106,7 @@ function M.lag( bane, camera, firkant1, deler )
 	if oppgradering.harRadar() then
 		pil = display.newGroup()
 		local trekant = display.newPolygon( pil, 0, 0, { 0, -14, 26, 0, 0, 14, 6, 0 } )
-		trekant:setFillColor( unpack( ui.F.draape ) )
+		trekant:setFillColor( unpack( ui.F.blad ) )
 		trekant.strokeWidth = 3
 		trekant:setStrokeColor( 1, 1, 1, 0.9 )
 		camera:add( pil, 1, false )
@@ -107,6 +115,22 @@ function M.lag( bane, camera, firkant1, deler )
 
 	local skitten = false
 	local sistLagret = system.getTimer()
+
+	-- Ungene som er funnet i runden, følger etter marken: små ringer som
+	-- ruller etter halen (del1) med litt forsinkelse. Bare grafikk.
+	local folgere = {}
+	local spor = {}            -- halens posisjoner de siste bildene
+	local SPOR_STEG = 9        -- bilder mellom hver følger
+
+	local function nyFolger()
+		local f = ui.ikon( display.newGroup(), "unge", 0, 0, 40 )
+		local g = f.parent
+		camera:add( g, 1, false )
+		g.x, g.y = deler[1].x, deler[1].y - 20
+		g.xScale, g.yScale = 0.1, 0.1
+		transition.to( g, { time = 350, xScale = 1, yScale = 1, transition = easing.outBack } )
+		folgere[#folgere + 1] = g
+	end
 
 	-- små gnister som spruter ut fra (x, y) i verden
 	local function gnister( x, y, farge, antall, avstand )
@@ -126,15 +150,21 @@ function M.lag( bane, camera, firkant1, deler )
 		t.tatt = true
 		local o = t.obj
 		if t.art == "draape" then
-			local verdi = math.random() < flaks and 2 or 1
+			local dobbel = math.random() < flaks
+			local verdi = t.verdi * ( dobbel and 2 or 1 )
 			siste.draaper = siste.draaper + verdi
 			framgang.leggTilDraaper( verdi, true )
 			oppdrag.hendelse( "draape", verdi )
-			lyd.spill( "draape" )
-			gnister( t.x, t.y, ui.F.draape, 6, 60 )
 			skitten = true
-			if verdi == 2 and o.parent then
-				ui.tekst( o, "x2", 0, -34, 22, { farge = ui.F.gull } )
+			if t.verdi > 1 then
+				lyd.spill( "gave" )
+				gnister( t.x, t.y, ui.F.gull, 12, 110 )
+			else
+				lyd.spill( "draape" )
+				gnister( t.x, t.y, ui.F.blad, 6, 60 )
+			end
+			if ( verdi > 1 ) and o.parent then
+				ui.tekst( o, "+" .. verdi, 0, -44, 24, { farge = ui.F.gull } )
 			end
 			tall:settTekst( tostring( siste.draaper ) )
 			transition.to( o, { time = 220, xScale = 1.8, yScale = 1.8, alpha = 0,
@@ -142,6 +172,7 @@ function M.lag( bane, camera, firkant1, deler )
 		else
 			siste.unger[t.i] = true
 			lyd.spill( "unge" )
+			nyFolger()
 			gnister( t.x, t.y, ui.F.gull, 12, 110 )
 			if not tidligere[t.i] then
 				local u = { false, false, false }
@@ -169,12 +200,28 @@ function M.lag( bane, camera, firkant1, deler )
 		end
 		local tid = system.getTimer()
 		local mx, my = deler[5].x, deler[5].y
+		-- følgerne
+		if deler[1].x then
+			table.insert( spor, 1, { deler[1].x, deler[1].y } )
+			if #spor > SPOR_STEG * 4 then spor[#spor] = nil end
+			for k, g in ipairs( folgere ) do
+				local p = spor[math.min( #spor, k * SPOR_STEG )]
+				if p and g.parent then
+					local dx = p[1] - g.x
+					g.x, g.y = p[1], p[2] - 16
+					g.rotation = g.rotation + dx * 2.5
+				end
+			end
+		end
 		for _, t in ipairs( ting ) do
 			if not t.tatt and t.obj.parent then
 				local dx, dy = t.x - mx, t.y - my
 				if dx > -NAER and dx < NAER and dy > -NAER and dy < NAER then
-					-- svev opp og ned bare når de er i nærheten
+					-- svev opp og ned (og bladene vipper litt) bare når de er i nærheten
 					t.obj.y = t.y + math.sin( tid * 0.004 + t.fase ) * 5
+					if t.art == "draape" and t.verdi == 1 then
+						t.obj.rotation = t.rot + math.sin( tid * 0.003 + t.fase ) * 10
+					end
 					local r = t.art == "draape" and rDraape or R_UNGE
 					local r2 = r * r
 					for _, d in ipairs( deler ) do

@@ -18,8 +18,8 @@ local framgang = require( "lib.framgang" )
 local M = {}
 
 local MULIGE = {
-	{ art = "draape", maal = 150, lonn = 40, tekst = "Collect %d dew drops" },
-	{ art = "draape", maal = 400, lonn = 90, tekst = "Collect %d dew drops" },
+	{ art = "draape", maal = 150, lonn = 40, tekst = "Collect %d leaves" },
+	{ art = "draape", maal = 400, lonn = 90, tekst = "Collect %d leaves" },
 	{ art = "bane", maal = 3, lonn = 40, tekst = "Finish %d levels" },
 	{ art = "bane", maal = 8, lonn = 100, tekst = "Finish %d levels" },
 	{ art = "unge", maal = 2, lonn = 60, tekst = "Find %d lost children" },
