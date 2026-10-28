@@ -175,8 +175,9 @@ function M.lag( bane, camera, firkant1, deler )
 	-- gjorde litt tidligere, samme vei, samme rulling og strekking. Bare
 	-- grafikk, ingen fysikk.
 	local folgere = {}
-	local spor = {}            -- marken sin positur de siste bildene (nyeste først)
-	local AVSTAND = 26         -- bilder mellom hver i rekka
+	local spor = {}            -- marken sin positur langs veien (nyeste først)
+	local STEG = 6             -- ny positur lagres når midten har flyttet seg så mye
+	local AVSTAND = 24         -- posturer mellom hver i rekka (ca. 140 enheter)
 	local SKALA = 0.55         -- ungene er litt over halvparten så store
 	local BILDER = { { "hale.png", 27, 17 } }
 	for i = 2, 8 do BILDER[i] = { "del1.png", 34, 17 } end
@@ -191,6 +192,11 @@ function M.lag( bane, camera, firkant1, deler )
 			local d = display.newImageRect( g, "mark/rosa/" .. b[1], b[2] * SKALA, b[3] * SKALA )
 			d.isVisible = false
 			g.deler[i] = d
+		end
+		-- rett bak marken (bak halen), ikke oppå den
+		local lag = deler[1].parent
+		for i = 1, lag.numChildren do
+			if lag[i] == deler[1] then lag:insert( i, g ) break end
 		end
 		g.alpha = 0
 		transition.to( g, { time = 400, alpha = 1 } )
@@ -284,10 +290,15 @@ function M.lag( bane, camera, firkant1, deler )
 		end
 		-- følgerne
 		if deler[1].x and deler[9].x then
-			local positur = {}
-			for i = 1, 9 do positur[i] = { deler[i].x, deler[i].y, deler[i].rotation } end
-			table.insert( spor, 1, positur )
-			if #spor > AVSTAND * 3 + 1 then spor[#spor] = nil end
+			local siste = spor[1]
+			local dx = siste and ( deler[5].x - siste[5][1] ) or STEG
+			local dy = siste and ( deler[5].y - siste[5][2] ) or 0
+			if dx * dx + dy * dy >= STEG * STEG then
+				local positur = {}
+				for i = 1, 9 do positur[i] = { deler[i].x, deler[i].y, deler[i].rotation } end
+				table.insert( spor, 1, positur )
+				if #spor > AVSTAND * 3 + 1 then spor[#spor] = nil end
+			end
 			for k, g in ipairs( folgere ) do
 				local positur = spor[math.min( #spor, k * AVSTAND )]
 				if positur and g.parent then tegnFolger( g, positur ) end
