@@ -45,7 +45,10 @@ function scene:create( event )
 		ui.tekst( grp, o[2], x, y + 8, 17, { bredde = 220, fet = false } )
 		ui.tekst( grp, o[4], x, y + 58, 16, { farge = ui.F.kremDempet } )
 		ui.knapp( grp, { tekst = "Play", ikon = "spill", x = x, y = y + 110, bredde = 180, hoyde = 54, farge = o[5],
-			trykk = function() nav.gaaTil( o[3] ) end } )
+			trykk = function()
+				require( "lib.oppdrag" ).hendelse( "sport", 1 )
+				nav.gaaTil( o[3] )
+			end } )
 	end
 end
 

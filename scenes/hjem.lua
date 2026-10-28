@@ -113,6 +113,7 @@ local function visGave( forelder, gave )
 	local hent = ui.knapp( g, { tekst = "Collect " .. gave.draaper, ikon = "draape", x = ui.CX, y = ui.CY + 112,
 		bredde = 260, hoyde = 62, trykk = function()
 			framgang.hentGave()
+			require( "lib.oppdrag" ).hendelse( "gave", 1 )
 			oppdaterDraaper()
 			if gaveKnapp then
 				transition.cancel( gaveKnapp )
@@ -164,23 +165,24 @@ function scene:create( event )
 	local ar = ROM.athletics
 	ui.ikon( grp, "stjerne", ar[1], ar[2] - 14, 40 )
 
-	romKnapp( grp, "butikk", function()
-		visSnart( grp, "Shop", "Upgrade your worm and buy new looks with dew drops. Opening soon!" )
-	end )
+	romKnapp( grp, "butikk", function() nav.gaaTil( "scenes.butikk" ) end )
 	romTittel( grp, "butikk", "Shop" )
-	ui.ikon( grp, "draape", ROM.butikk[1], ROM.butikk[2] - 14, 44 )
+	ui.ikon( grp, "pose", ROM.butikk[1], ROM.butikk[2] - 14, 46 )
 
-	romKnapp( grp, "oppdrag", function()
-		visSnart( grp, "Quests", "Weekly challenges with dew drop rewards. Opening soon!" )
-	end )
+	romKnapp( grp, "oppdrag", function() nav.gaaTil( "scenes.oppdrag" ) end )
 	romTittel( grp, "oppdrag", "Quests" )
-	ui.ikon( grp, "liste", ROM.oppdrag[1], ROM.oppdrag[2] - 14, 36 )
-
-	for _, n in ipairs( { "butikk", "oppdrag" } ) do
-		local r = ROM[n]
-		local merke = display.newRoundedRect( grp, r[1] + r[3] / 2 - 40, r[2] - r[4] / 2 + 8, 70, 26, 13 )
-		merke:setFillColor( unpack( ui.F.oransje ) )
-		ui.tekst( grp, "SOON", merke.x, merke.y - 1, 15, { farge = ui.F.hvit } )
+	ui.ikon( grp, "flagg", ROM.oppdrag[1], ROM.oppdrag[2] - 14, 42 )
+	-- merke når et oppdrag er klart til å hentes
+	local klare = require( "lib.oppdrag" ).klare()
+	if klare > 0 then
+		local r = ROM.oppdrag
+		local merke = display.newCircle( grp, r[1] + r[3] / 2 - 18, r[2] - r[4] / 2 + 14, 17 )
+		merke:setFillColor( unpack( ui.F.hjerte ) )
+		merke.strokeWidth = 3
+		merke:setStrokeColor( 1, 1, 1 )
+		ui.tekst( grp, tostring( klare ), merke.x, merke.y - 1, 18, { farge = ui.F.hvit } )
+		transition.to( merke, { time = 600, xScale = 1.15, yScale = 1.15, iterations = 0,
+			transition = easing.continuousLoop } )
 	end
 
 	-- topplinje

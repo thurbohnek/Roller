@@ -1,0 +1,203 @@
+-- Dråper og markeunger i banene (lagt til 2026-10-28).
+--
+-- Posisjonene står i lib/samleN.lua (lages av Util/grafikk/lag_samling.py),
+-- i enheter fra sentrum av flis 1, så de følger banen også med teststart.
+--
+-- Tingene har ingen fysikk: hvert bilde sjekkes avstanden fra marken sine
+-- ledd til tingene i nærheten. Da kan de ikke påvirke hvordan marken
+-- beveger seg, og de gamle kollisjonslytterne i banefilene ser dem ikke.
+--
+--   Dråpe: +1 dråpe (lagres med en gang, men skrives til disk høyst
+--          én gang i sekundet).
+--   Unge:  lagres som reddet i banen med en gang (lib/framgang.lua).
+--          Unger som er reddet fra før, vises som skygger.
+--
+-- Evner fra butikken (lib/oppgradering.lua): magnet (lengre fangavstand
+-- for dråper), flaks (noen dråper teller dobbelt) og radar (pil ved
+-- marken mot nærmeste unge som mangler).
+--
+-- Fra banefila, etter at fliser og mark er lagt i kameraet:
+--     require( "lib.samling" ).lag( N, camera, firkant1,
+--         { del1, del2, del3, del4, del5, del6, del7, del8, del9 } )
+
+local ui = require( "lib.ui" )
+local hud = require( "lib.hud" )
+local framgang = require( "lib.framgang" )
+local oppgradering = require( "lib.oppgradering" )
+local oppdrag = require( "lib.oppdrag" )
+
+local M = {}
+
+local R_DRAAPE = 46      -- fangavstand fra sentrum av et ledd, i enheter
+local R_UNGE = 56
+local NAER = 700         -- bare ting nærmere enn dette sjekkes nøye
+
+local siste = { bane = nil, draaper = 0, unger = { false, false, false } }
+
+-- Resultatet fra sist spilte runde (brukes av scenes/fullfort.lua).
+function M.siste()
+	return siste
+end
+
+local function hudRad( bane, tidligere )
+	local h = hud.gruppe()
+	local g = display.newGroup()
+	h:insert( g )
+	local x, y = ui.VENSTRE + 96, ui.TOPP + 98
+	local flate = display.newRoundedRect( g, x + 34, y, 232, 44, 22 )
+	flate:setFillColor( ui.F.jord[1], ui.F.jord[2], ui.F.jord[3], 0.8 )
+	flate.strokeWidth = 3
+	flate:setStrokeColor( unpack( ui.F.kant ) )
+	ui.ikon( g, "draape", x - 60, y, 30 )
+	local tall = ui.tekst( g, "0", x - 38, y - 1, 20, { ankerX = 0 } )
+	local plasser = {}
+	for i = 1, 3 do
+		local px = x + 40 + ( i - 1 ) * 38
+		plasser[i] = ui.ikon( g, tidligere[i] and "unge" or "ungeTom", px, y, 32 )
+		if tidligere[i] then plasser[i].alpha = 0.55 end
+	end
+	return g, tall, plasser
+end
+
+function M.lag( bane, camera, firkant1, deler )
+	local ok, data = pcall( require, "lib.samle" .. bane )
+	if not ok or type( data ) ~= "table" then return end
+
+	siste = { bane = bane, draaper = 0, unger = { false, false, false } }
+	local tidligere = framgang.unger( bane )
+	local rad, tall, plasser = hudRad( bane, tidligere )
+
+	local ting = {}
+	local holder = display.newGroup()      -- for å vite når banen rives
+	camera:add( holder, 1, false )
+
+	local function legg( x, y, art, i )
+		local g = display.newGroup()
+		g.x, g.y = firkant1.x + x, firkant1.y + y
+		if art == "draape" then
+			ui.ikon( g, "draape", 0, 0, 44 )
+		else
+			local glod = display.newCircle( g, 0, 0, 46 )
+			glod:setFillColor( 1, 0.85, 0.55, 0.28 )
+			ui.ikon( g, "unge", 0, 0, 74 )
+			if tidligere[i] then g.alpha = 0.35 end
+		end
+		camera:add( g, 1, false )
+		ting[#ting + 1] = { obj = g, art = art, i = i, x = g.x, y = g.y,
+			fase = math.random() * 6.28 }
+	end
+	for _, p in ipairs( data.draaper or {} ) do legg( p[1], p[2], "draape" ) end
+	for i, p in ipairs( data.unger or {} ) do legg( p[1], p[2], "unge", i ) end
+
+	local rDraape = R_DRAAPE * oppgradering.magnetFaktor()
+	local flaks = oppgradering.flaksSjanse()
+
+	-- radarpil: kretser rundt marken og peker mot nærmeste unge som mangler
+	local pil
+	if oppgradering.harRadar() then
+		pil = display.newGroup()
+		local trekant = display.newPolygon( pil, 0, 0, { 0, -14, 26, 0, 0, 14, 6, 0 } )
+		trekant:setFillColor( unpack( ui.F.draape ) )
+		trekant.strokeWidth = 3
+		trekant:setStrokeColor( 1, 1, 1, 0.9 )
+		camera:add( pil, 1, false )
+		pil.isVisible = false
+	end
+
+	local skitten = false
+	local sistLagret = system.getTimer()
+
+	local function ta( t )
+		t.tatt = true
+		local o = t.obj
+		if t.art == "draape" then
+			local verdi = math.random() < flaks and 2 or 1
+			siste.draaper = siste.draaper + verdi
+			framgang.leggTilDraaper( verdi, true )
+			oppdrag.hendelse( "draape", verdi )
+			skitten = true
+			if verdi == 2 and o.parent then
+				ui.tekst( o, "x2", 0, -34, 22, { farge = ui.F.gull } )
+			end
+			tall:settTekst( tostring( siste.draaper ) )
+			transition.to( o, { time = 220, xScale = 1.8, yScale = 1.8, alpha = 0,
+				onComplete = function() display.remove( o ) end } )
+		else
+			siste.unger[t.i] = true
+			if not tidligere[t.i] then
+				local u = { false, false, false }
+				u[t.i] = true
+				framgang.lagreUnger( bane, u )
+				oppdrag.hendelse( "unge", 1 )
+			end
+			local p = plasser[t.i]
+			if p and p.parent then
+				local ny = ui.ikon( p.parent, "unge", p.x, p.y, 32 )
+				display.remove( p )
+				plasser[t.i] = ny
+				ui.sprett( ny, 0 )
+			end
+			transition.to( o, { time = 450, xScale = 2.2, yScale = 2.2, alpha = 0,
+				transition = easing.outQuad, onComplete = function() display.remove( o ) end } )
+		end
+	end
+
+	local function hvertBilde()
+		if not holder.parent or not deler[5] or not deler[5].x then
+			Runtime:removeEventListener( "enterFrame", hvertBilde )
+			if skitten then framgang.lagre() end
+			return
+		end
+		local tid = system.getTimer()
+		local mx, my = deler[5].x, deler[5].y
+		for _, t in ipairs( ting ) do
+			if not t.tatt and t.obj.parent then
+				local dx, dy = t.x - mx, t.y - my
+				if dx > -NAER and dx < NAER and dy > -NAER and dy < NAER then
+					-- svev opp og ned bare når de er i nærheten
+					t.obj.y = t.y + math.sin( tid * 0.004 + t.fase ) * 5
+					local r = t.art == "draape" and rDraape or R_UNGE
+					local r2 = r * r
+					for _, d in ipairs( deler ) do
+						if d.x then
+							local ex, ey = t.x - d.x, t.y - d.y
+							if ex * ex + ey * ey < r2 then
+								ta( t )
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+		if pil then
+			-- nærmeste unge som ikke er reddet
+			local best, bd
+			for _, t in ipairs( ting ) do
+				if t.art == "unge" and not t.tatt and not tidligere[t.i] then
+					local dx, dy = t.x - mx, t.y - my
+					local d2 = dx * dx + dy * dy
+					if not bd or d2 < bd then best, bd = t, d2 end
+				end
+			end
+			if best and bd > 260 * 260 then
+				local v = math.atan2( best.y - my, best.x - mx )
+				pil.x, pil.y = mx + math.cos( v ) * 120, my + math.sin( v ) * 120
+				pil.rotation = math.deg( v )
+				pil.isVisible = true
+				pil:toFront()
+			else
+				pil.isVisible = false
+			end
+		end
+		if skitten and tid - sistLagret > 1000 then
+			framgang.lagre()
+			skitten = false
+			sistLagret = tid
+		end
+	end
+	Runtime:addEventListener( "enterFrame", hvertBilde )
+	hud.gruppe():toFront()
+end
+
+return M

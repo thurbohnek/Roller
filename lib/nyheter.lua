@@ -14,6 +14,12 @@ local GGData = require( "lib.GGData" )
 local M = {}
 
 M.NYHETER = {
+	{ nr = 4, dato = "2026-10-28", linjer = {
+		"All 9 levels are repainted: a sunny meadow on top, deeper and darker caves below.",
+		"Collect dew drops and find 3 lost baby worms hidden in every level.",
+		"The Shop is open: new worm colours, hats and helpful abilities.",
+		"Weekly quests give extra dew drops.",
+	} },
 	{ nr = 3, dato = "2026-10-28", linjer = {
 		"A brand new look! Your worm's underground home is the new menu.",
 		"A new map from the meadow down into the deep caves.",

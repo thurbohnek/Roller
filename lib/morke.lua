@@ -16,7 +16,9 @@ local M = {}
 
 -- Hvor tett mørket er i hver bane, 0 = ingen mørke, 1 = helt svart
 -- utenfor lyset.
-M.STYRKE = { 0, 0.10, 0.18, 0.26, 0.34, 0.42, 0.50, 0.58, 0.66 }
+-- Bane 1-2 er på enga (ingen mørke). Grafikken blir selv mørkere nedover
+-- (2026-10-28), så mørket er svakere enn før.
+M.STYRKE = { 0, 0, 0.08, 0.14, 0.20, 0.26, 0.32, 0.38, 0.44 }
 
 -- morke.png er 1024 bildepunkter og vises 4000 skjermenheter bred, så
 -- mørket dekker skjermen (960 x 540) uansett hvor marken er. Lyset er

@@ -300,6 +300,73 @@ def gave():
     ferdig(im, "gave")
 
 
+def magnet():
+    """Evne i butikken: dråper trekkes til marken."""
+    im = lerret()
+    d = ImageDraw.Draw(im)
+    b = p(0.17)
+    d.arc((p(0.18), p(0.14), p(0.82), p(0.78)), 180, 360, fill=ROD_M, width=int(b + p(0.03)))
+    d.arc((p(0.195), p(0.155), p(0.805), p(0.765)), 180, 360, fill=ROD, width=int(b))
+    for x in (p(0.18), p(0.82) - b - p(0.03)):
+        d.rectangle((x, p(0.46), x + b + p(0.03), p(0.66)), fill=ROD)
+        d.rectangle((x, p(0.66), x + b + p(0.03), p(0.84)), fill=hexf("E8EEF2"))
+        d.rectangle((x, p(0.80), x + b + p(0.03), p(0.84)), fill=hexf("B8C2CA"))
+    ferdig(im, "magnet")
+
+
+def klover():
+    """Evne i butikken: flaks gir doble dråper."""
+    im = lerret()
+    d = ImageDraw.Draw(im)
+    gr, grm = hexf("6BD98A"), hexf("2F9A52")
+    d.line([(p(0.5), p(0.55)), (p(0.62), p(0.9))], fill=grm, width=int(p(0.06)))
+    for a in (0, 90, 180, 270):
+        r = math.radians(a + 45)
+        cx, cy = p(0.5) + math.cos(r) * p(0.17), p(0.47) + math.sin(r) * p(0.17)
+        d.ellipse((cx - p(0.17), cy - p(0.17), cx + p(0.17), cy + p(0.17)), fill=grm)
+        d.ellipse((cx - p(0.145), cy - p(0.145), cx + p(0.145), cy + p(0.145)), fill=gr)
+    d.ellipse((p(0.44), p(0.41), p(0.56), p(0.53)), fill=grm)
+    ferdig(im, "klover")
+
+
+def radar():
+    """Evne i butikken: pil mot ungene."""
+    im = lerret()
+    d = ImageDraw.Draw(im)
+    d.ellipse((p(0.1), p(0.1), p(0.9), p(0.9)), fill=hexf("2E7FB8"))
+    d.ellipse((p(0.14), p(0.14), p(0.86), p(0.86)), fill=hexf("5BB8F0"))
+    for r in (0.27, 0.15):
+        d.ellipse((p(0.5 - r), p(0.5 - r), p(0.5 + r), p(0.5 + r)), outline=hexf("D8F2FF"), width=int(p(0.025)))
+    d.pieslice((p(0.14), p(0.14), p(0.86), p(0.86)), 290, 340, fill=(255, 255, 255, 120))
+    d.ellipse((p(0.6), p(0.26), p(0.72), p(0.38)), fill=ROSA)
+    d.ellipse((p(0.46), p(0.46), p(0.54), p(0.54)), fill=HVIT)
+    ferdig(im, "radar")
+
+
+def flagg():
+    """Oppdrag."""
+    im = lerret()
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((p(0.2), p(0.1), p(0.27), p(0.9)), radius=p(0.03), fill=hexf("8A5A34"))
+    d.polygon([(p(0.27), p(0.14)), (p(0.84), p(0.26)), (p(0.27), p(0.54))], fill=GULL_M)
+    d.polygon([(p(0.27), p(0.17)), (p(0.78), p(0.27)), (p(0.27), p(0.5))], fill=GULL)
+    d.ellipse((p(0.15), p(0.06), p(0.32), p(0.2)), fill=GULL)
+    ferdig(im, "flagg")
+
+
+def pose():
+    """Butikken."""
+    im = lerret()
+    d = ImageDraw.Draw(im)
+    d.arc((p(0.32), p(0.1), p(0.68), p(0.46)), 180, 360, fill=JORD, width=int(p(0.05)))
+    d.rounded_rectangle((p(0.16), p(0.3), p(0.84), p(0.9)), radius=p(0.08), fill=hexf("C9405A"))
+    d.rounded_rectangle((p(0.2), p(0.34), p(0.8), p(0.86)), radius=p(0.06), fill=hexf("F05A6E"))
+    # en dråpe på posen
+    d.ellipse((p(0.38), p(0.5), p(0.62), p(0.74)), fill=BLA)
+    d.polygon([(p(0.5), p(0.38)), (p(0.385), p(0.6)), (p(0.615), p(0.6))], fill=BLA)
+    ferdig(im, "pose")
+
+
 def pauseknapp():
     """pauseknapp.png i roten (knapp1 i banefilene): rund jordknapp med
     pause-ikon, samme stil som ui.rundKnapp. 150 x 150."""
@@ -326,7 +393,7 @@ def main():
     os.makedirs(UT, exist_ok=True)
     pauseknapp()
     for f in (draape, hjerte, unge, unge_tom, pause, spill, tilbake, igjen, hjem, liste, tannhjul,
-              laas, stjerne, hake, gave, hjelp):
+              laas, stjerne, hake, gave, hjelp, magnet, klover, radar, flagg, pose):
         f()
     lyd(False)
     lyd(True)

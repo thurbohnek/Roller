@@ -181,6 +181,11 @@ M.IKON = {
 	tannhjul = { "ui/tannhjul.png", 1 },
 	hake = { "ui/hake.png", 1 },
 	hjelp = { "ui/hjelp.png", 1 },
+	magnet = { "ui/magnet.png", 1 },
+	klover = { "ui/klover.png", 1 },
+	radar = { "ui/radar.png", 1 },
+	flagg = { "ui/flagg.png", 1 },
+	pose = { "ui/pose.png", 1 },
 }
 function M.ikon( forelder, navn, x, y, storrelse )
 	local i = M.IKON[navn]

@@ -27,6 +27,9 @@ local M = {}
 
 M.DOBBELTKLIKK = 300 -- ms, som dobbeltklikkVindu i banene
 
+local oppgradering = require( "lib.oppgradering" )
+local drakt = oppgradering.drakt
+
 function M.lag( forelder, x, y )
 	local mark = { deler = {}, ledd = {} }
 
@@ -36,23 +39,24 @@ function M.lag( forelder, x, y )
 		return d
 	end
 
-	local del1 = del( "hale.png", 55, 35, 0, 0 )
+	local del1 = del( drakt( "hale.png" ), 55, 35, 0, 0 )
 	del1.width, del1.height = 27, 17
 	physics.addBody( del1, "dynamic", { density = 1.0, friction = 0.3, bounce = 0.2,
 		shape = { -13, 8, -13, -8, 11, 3, 14, 0, 11, -3 } } )
 	mark.deler[1] = del1
 	for i = 2, 8 do
-		local d = del( "del1.png", 34, 17, -27 * ( i - 1 ), 0 )
+		local d = del( drakt( "del1.png" ), 34, 17, -27 * ( i - 1 ), 0 )
 		physics.addBody( d, "dynamic", physicsData:get( "del1" ) )
 		mark.deler[i] = d
 	end
-	local del9 = del( "hode.png", 30, 25, -217, 2 )
+	local del9 = del( drakt( "hode.png" ), 30, 25, -217, 2 )
 	physics.addBody( del9, "dynamic", { density = 1.0, friction = 1.3, bounce = 0.2,
 		shape = { -15, -5, -12, -10, -10, -10, 0, -9, 14, -11, 0, -11, 14, 6, -12, 4 } } )
 	mark.deler[9] = del9
 	for _, d in ipairs( mark.deler ) do d.erMark = true end
 	mark.midt = mark.deler[5]
 	mark.hode = del9
+	oppgradering.settPaaHatt( forelder, del9 )
 
 	local punkt = display.newRect( forelder, x - 108, y - 40, 10, 10 )
 	punkt.alpha = 0

@@ -25,6 +25,7 @@ if data.beste == nil then data.beste = {} end
 local function lagre()
 	data:save()
 end
+M.lagre = lagre
 
 -- ---------------------------------------------------------- dråper
 
@@ -32,9 +33,11 @@ function M.draaper()
 	return data.draaper or 0
 end
 
-function M.leggTilDraaper( n )
+-- utsett = true: lagres ikke til disk nå (samling i banen lagrer selv
+-- høyst én gang i sekundet med M.lagre()).
+function M.leggTilDraaper( n, utsett )
 	data.draaper = math.max( 0, M.draaper() + n )
-	lagre()
+	if not utsett then lagre() end
 	return data.draaper
 end
 
@@ -88,6 +91,15 @@ function M.fullfor( bane )
 	data.fullfort[tostring( bane )] = true
 	lagre()
 	return forste
+end
+
+-- Bonus første gang banen klares. Returnerer true bare én gang per bane.
+function M.taBonus( bane )
+	data.bonus = data.bonus or {}
+	if data.bonus[tostring( bane )] then return false end
+	data.bonus[tostring( bane )] = true
+	lagre()
+	return true
 end
 
 -- ---------------------------------------------------------- daglig gave
