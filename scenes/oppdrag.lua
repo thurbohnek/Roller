@@ -54,7 +54,10 @@ tegn = function()
 		elseif ferdig then
 			local k = ui.knapp( innhold, { tekst = "+" .. o.lonn, ikon = "draape", x = x + 262, y = y, bredde = 130,
 				hoyde = 52, storrelse = 22, trykk = function()
-					if oppdrag.hent( i ) then tegn() end
+					if oppdrag.hent( i ) then
+						require( "lib.lyd" ).spill( "kjop" )
+						tegn()
+					end
 				end } )
 			transition.to( k, { tag = "oppdrag", time = 600, xScale = 1.07, yScale = 1.07, iterations = 0,
 				transition = easing.continuousLoop } )

@@ -25,6 +25,7 @@ local hud = require( "lib.hud" )
 local framgang = require( "lib.framgang" )
 local oppgradering = require( "lib.oppgradering" )
 local oppdrag = require( "lib.oppdrag" )
+local lyd = require( "lib.lyd" )
 
 local M = {}
 
@@ -107,6 +108,20 @@ function M.lag( bane, camera, firkant1, deler )
 	local skitten = false
 	local sistLagret = system.getTimer()
 
+	-- små gnister som spruter ut fra (x, y) i verden
+	local function gnister( x, y, farge, antall, avstand )
+		for i = 1, antall do
+			local v = ( i / antall ) * math.pi * 2 + math.random() * 0.5
+			local p = display.newCircle( 0, 0, math.random( 5, 9 ) )
+			camera:add( p, 1, false )
+			p.x, p.y = x, y
+			p:setFillColor( farge[1], farge[2], farge[3] )
+			transition.to( p, { time = 380, x = x + math.cos( v ) * avstand, y = y + math.sin( v ) * avstand,
+				alpha = 0, xScale = 0.3, yScale = 0.3, transition = easing.outQuad,
+				onComplete = function() display.remove( p ) end } )
+		end
+	end
+
 	local function ta( t )
 		t.tatt = true
 		local o = t.obj
@@ -115,6 +130,8 @@ function M.lag( bane, camera, firkant1, deler )
 			siste.draaper = siste.draaper + verdi
 			framgang.leggTilDraaper( verdi, true )
 			oppdrag.hendelse( "draape", verdi )
+			lyd.spill( "draape" )
+			gnister( t.x, t.y, ui.F.draape, 6, 60 )
 			skitten = true
 			if verdi == 2 and o.parent then
 				ui.tekst( o, "x2", 0, -34, 22, { farge = ui.F.gull } )
@@ -124,6 +141,8 @@ function M.lag( bane, camera, firkant1, deler )
 				onComplete = function() display.remove( o ) end } )
 		else
 			siste.unger[t.i] = true
+			lyd.spill( "unge" )
+			gnister( t.x, t.y, ui.F.gull, 12, 110 )
 			if not tidligere[t.i] then
 				local u = { false, false, false }
 				u[t.i] = true

@@ -605,9 +605,84 @@ def banevalg_bg():
     im.convert("RGB").save(os.path.join(UT, "banevalg_bg.jpg"), quality=90)
 
 
+def arena_bg():
+    """Arenaen bak Worm athletics: en stor hule under jorda med tribuner,
+    publikum (små marker), flagg og lykter. 2400 x 1080 (1200 x 540
+    skjermenheter i 2x) og går i ring sidelengs, for lib/minisport.lua
+    legger flere etter hverandre og ruller dem sakte."""
+    W, H = 2400, 1080
+    rng = np.random.default_rng(77)
+    # bakvegg: varm jord, mørkere nedover
+    im = gradient_bilde(W, H, hexf("6A3E1E"), hexf("2A1406")).convert("RGBA")
+    d = ImageDraw.Draw(im)
+
+    def per(n, amp, fro):
+        r = np.random.default_rng(fro)
+        x = np.arange(W) / W * 2 * math.pi
+        y = np.zeros(W)
+        for k in range(1, n + 1):
+            y += r.normal(0, 1) / k * np.sin(k * x + r.uniform(0, 6.3))
+        return y / (np.abs(y).max() + 1e-9) * amp
+
+    # lyse flekker (lys fra lyktene)
+    # (tegnes tre ganger så bredt og klippes, så uskarpheten går i ring)
+    lys = Image.new("RGBA", (W * 3, H), (0, 0, 0, 0))
+    ld = ImageDraw.Draw(lys)
+    for x in range(150, W * 3, 600):
+        ld.ellipse((x - 260, 120, x + 260, 560), fill=(255, 190, 110, 60))
+    lys = lys.filter(ImageFilter.GaussianBlur(90)).crop((W, 0, 2 * W, H))
+    im.alpha_composite(lys)
+    d = ImageDraw.Draw(im)
+
+    # tribuner: tre trinn med publikum
+    farger = [("F49AA8", "C95574"), ("FFC53D", "C9901E"), ("78CDFA", "2E7FB8"), ("6FD488", "3A9E58"),
+              ("A97BF0", "7449C0"), ("FF9A3D", "C9661E")]
+    for trinn, (y0, st) in enumerate(((560, 34), (650, 40), (750, 46))):
+        d.rectangle((0, y0 + st * 0.9, W, y0 + st * 0.9 + 70), fill=hexf(["5A3418", "4E2C12", "42240E"][trinn]))
+        d.rectangle((0, y0 + st * 0.9, W, y0 + st * 0.9 + 8), fill=hexf("8A5A34"))
+        x = rng.uniform(0, 30)
+        while x < W - st:
+            f, m = farger[rng.integers(0, len(farger))]
+            mark_ring(d, x + st, y0 + st * 0.2 + rng.uniform(-4, 4), st * 0.55, st * 0.42,
+                      hexf(f), hexf(m), (255, 255, 255, 120), ansikt=True, apen=rng.uniform(40, 80))
+            x += st * 2.1 + rng.uniform(0, st * 0.6)
+    # tak med drypp
+    tak = 120 + per(6, 40, 3)
+    pts = [(0, 0)] + [(x, tak[x]) for x in range(0, W, 8)] + [(W, tak[0]), (W, 0)]
+    d.polygon(pts, fill=hexf("3E1F0C"))
+    for i in range(14):
+        x = (i + rng.uniform(0.2, 0.8)) * W / 14
+        y = tak[int(x) % W]
+        l = rng.uniform(40, 120)
+        b = rng.uniform(18, 34)
+        d.polygon([(x - b, y - 4), (x + b, y - 4), (x, y + l)], fill=hexf("3E1F0C"))
+    d.line([(x, tak[x] + 2) for x in range(0, W, 8)] + [(W, tak[0] + 2)], fill=hexf("8A5A34"), width=6)
+    # flaggsnorer og lykter
+    for start in range(0, W, 600):
+        a, b = (start, 200), (start + 600, 200)
+        pkt = [(a[0] + t * 600, 200 + 70 * math.sin(math.pi * t)) for t in np.linspace(0, 1, 30)]
+        d.line(pkt, fill=hexf("2A1406"), width=5)
+        for i, t in enumerate(np.linspace(0.08, 0.92, 9)):
+            x, y = a[0] + t * 600, 200 + 70 * math.sin(math.pi * t)
+            f = hexf(["F05A6E", "FFD054", "78CDFA", "6FD488"][i % 4])
+            d.polygon([(x - 16, y), (x + 16, y), (x, y + 38)], fill=f)
+        lx = start + 300
+        d.line([(lx, tak[lx % W]), (lx, 330)], fill=hexf("2A1406"), width=4)
+        d.rounded_rectangle((lx - 22, 330, lx + 22, 380), radius=10, fill=hexf("FFD054"))
+        d.rounded_rectangle((lx - 22, 330, lx + 22, 340), radius=4, fill=hexf("3E1F0C"))
+    gl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(gl)
+    for start in range(0, W, 600):
+        lx = start + 300
+        gd.ellipse((lx - 90, 265, lx + 90, 445), fill=(255, 210, 120, 110))
+    im.alpha_composite(gl.filter(ImageFilter.GaussianBlur(30)))  # lyktene er langt fra kantene
+    im.convert("RGB").save(os.path.join(UT, "arena_bg.jpg"), quality=88)
+
+
 def bakgrunner():
     hjem_bg()
     banevalg_bg()
+    arena_bg()
     print("bakgrunner skrevet til", UT)
 
 

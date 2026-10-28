@@ -77,7 +77,10 @@ local function kjopKnapp( forelder, x, y, b, pris, kjop )
 				melding( "Not enough dew drops yet" )
 				return
 			end
-			if kjop() then kjopt() end
+			if kjop() then
+				require( "lib.lyd" ).spill( "kjop" )
+				kjopt()
+			end
 		end } )
 end
 

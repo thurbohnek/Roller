@@ -40,6 +40,7 @@ function scene:create( event )
 	end
 	framgang.lagre()
 	require( "lib.oppdrag" ).hendelse( "bane", 1 )
+	require( "lib.lyd" ).spill( "mal" )
 
 	-- ungene i banen: tre plasser som spretter inn én etter én
 	local u = framgang.unger( bane )

@@ -111,8 +111,10 @@ function scene:create( event )
 	-- mål
 	local linje = display.newRect( verden, MAAL, bakkeY( MAAL ) + 10, 20, 40 )
 	linje:setFillColor( 0.92, 0.9, 0.84 )
-	local skilt = display.newImageRect( verden, "pausemenu.png", 300, 140 )
-	skilt.x, skilt.y = MAAL, bakkeY( MAAL ) - 260
+	local skilt = display.newRoundedRect( verden, MAAL, bakkeY( MAAL ) - 260, 300, 120, 24 )
+	skilt:setFillColor( unpack( require( "lib.ui" ).F.jord ) )
+	skilt.strokeWidth = 6
+	skilt:setStrokeColor( unpack( require( "lib.ui" ).F.gull ) )
 	sport.tekst( verden, "Finish", MAAL, bakkeY( MAAL ) - 260, 48 )
 
 	sport.tekst( grp, "100 m", sport.B / 2, 30, 30 )

@@ -17,6 +17,7 @@ local composer = require( "composer" )
 local physics = require( "physics" )
 local perspective = require( "lib.perspective" )
 local GGData = require( "lib.GGData" )
+local ui = require( "lib.ui" )
 
 local M = {}
 
@@ -44,25 +45,17 @@ function M.nyRekord( navn, verdi, storreErBedre )
 	return bedre
 end
 
--- Bakgrunn. meny = true: startskjermen flatet ut til ett bilde
--- (meny_bg.jpg), fast på skjermen. Ellers hulepanoramaet (arena_bg.jpg),
--- to bilder etter hverandre som ruller sakte bak banen: kall
--- bg:rull( kameraX ) hvert bilde. Begge lages av
--- Util/knapper/lag_knapper.py.
-function M.bakgrunn( forelder, meny )
+-- Bakgrunn: arenaen under jorda (ui/arena_bg.jpg, laget av
+-- Util/grafikk/lag_ui.py), tre bilder etter hverandre som ruller sakte
+-- bak banen: kall bg:rull( kameraX ) hvert bilde.
+function M.bakgrunn( forelder )
 	local g = display.newGroup()
 	forelder:insert( g )
-	if meny then
-		local bg = display.newImageRect( g, "meny_bg.jpg", 1920, 1080 )
-		bg.x, bg.y = M.B / 2, M.H / 2
-		function g:rull() end
-		return g
-	end
 	-- dekker hele skjermhøyden, også på skjermer som er høyere enn 16:9
 	local hoyde = display.actualContentHeight + 20
 	local BB = 1200 * hoyde / 540
 	for i = 0, 2 do
-		local bg = display.newImageRect( g, "arena_bg.jpg", BB, hoyde )
+		local bg = display.newImageRect( g, "ui/arena_bg.jpg", BB, hoyde )
 		bg.anchorX = 0
 		bg.x, bg.y = display.screenOriginX + ( i - 1 ) * BB, display.contentCenterY
 	end
@@ -72,9 +65,10 @@ function M.bakgrunn( forelder, meny )
 	return g
 end
 
-local KANT = { 72 / 255, 33 / 255, 6 / 255 }
-local KROPP = { 38 / 255, 14 / 255, 1 / 255 }
-local ISFARGE = { 36 / 255, 96 / 255, 118 / 255 }
+-- Løpebane i ny stil (2026-10-28): rødbrun bane med lys kant oppå jord.
+local KANT = ui.rgb( "C9563A" )
+local KANT_LYS = { 1, 0.75, 0.6 }
+local ISFARGE = { 0.47, 0.8, 0.98 }
 
 local function flat( pkt )
 	local ut = {}
@@ -105,11 +99,22 @@ function M.terreng( verden, pkt, valg )
 		miny, maxy = math.min( miny, p[2] ), math.max( maxy, p[2] )
 	end
 	local poly = display.newPolygon( verden, ( minx + maxx ) / 2, ( miny + maxy ) / 2, flat( fyll ) )
-	poly:setFillColor( unpack( KROPP ) )
+	if valg.opp then
+		poly.fill = ui.gradient( ui.F.jordMork, ui.F.jord )
+	else
+		poly.fill = ui.gradient( ui.F.jord, ui.F.jordMork )
+	end
 	local linje = display.newLine( verden, pkt[1][1], pkt[1][2], pkt[2][1], pkt[2][2] )
 	for i = 3, #pkt do linje:append( pkt[i][1], pkt[i][2] ) end
 	linje:setStrokeColor( unpack( valg.farge or ( valg.is and ISFARGE ) or KANT ) )
 	linje.strokeWidth = valg.is and 22 or 30
+	-- lys stripe langs toppen av banen
+	if not valg.opp then
+		local glans = display.newLine( verden, pkt[1][1], pkt[1][2] - 11, pkt[2][1], pkt[2][2] - 11 )
+		for i = 3, #pkt do glans:append( pkt[i][1], pkt[i][2] - 11 ) end
+		glans:setStrokeColor( KANT_LYS[1], KANT_LYS[2], KANT_LYS[3], 0.45 )
+		glans.strokeWidth = 5
+	end
 	-- fysikken: en kjede langs overflata, fra et usynlig ankerpunkt i (0, 0)
 	local anker = display.newRect( verden, 0, 0, 1, 1 )
 	anker.isVisible = false
@@ -120,18 +125,25 @@ end
 
 -- Merke i verden (en liten stolpe med tekst over bakken i x, y).
 function M.merke( verden, x, y, tekst, storrelse )
-	local p = display.newRect( verden, x, y - 30, 8, 60 )
-	p:setFillColor( 0.55, 0.45, 0.35 )
-	local t = display.newText( { parent = verden, text = tekst, x = x, y = y - 90,
-		font = native.systemFontBold, fontSize = storrelse or 40 } )
-	t:setFillColor( 0.9, 0.82, 0.7 )
+	local p = display.newRoundedRect( verden, x, y - 34, 10, 68, 5 )
+	p:setFillColor( unpack( ui.F.krem ) )
+	local skilt = display.newRoundedRect( verden, x, y - 96, ( storrelse or 40 ) * ( #tekst * 0.62 + 0.9 ),
+		( storrelse or 40 ) * 1.35, 14 )
+	skilt:setFillColor( ui.F.jordMork[1], ui.F.jordMork[2], ui.F.jordMork[3], 0.85 )
+	skilt.strokeWidth = 4
+	skilt:setStrokeColor( unpack( ui.F.kant ) )
+	local t = display.newText( { parent = verden, text = tekst, x = x, y = y - 98,
+		font = ui.SKRIFT_FET, fontSize = storrelse or 40 } )
+	t:setFillColor( unpack( ui.F.krem ) )
 	return t
 end
 
+-- Tekst som øvelsene endrer med o.text = "...". Samme skrift som resten
+-- av spillet.
 function M.tekst( forelder, t, x, y, storrelse, farge )
 	local o = display.newText( { parent = forelder, text = t, x = x, y = y,
-		font = native.systemFontBold, fontSize = storrelse or 22 } )
-	o:setFillColor( unpack( farge or { 0.95, 0.85, 0.7 } ) )
+		font = ui.SKRIFT_FET, fontSize = storrelse or 22 } )
+	o:setFillColor( unpack( farge or ui.F.krem ) )
 	return o
 end
 
@@ -144,6 +156,7 @@ local function paaTrykk( o, trykk )
 		elseif e.phase == "ended" or e.phase == "cancelled" then
 			display.getCurrentStage():setFocus( nil )
 			if e.phase == "ended" then
+				require( "lib.lyd" ).spill( "klikk" )
 				trykk()
 			end
 		end
@@ -152,25 +165,34 @@ local function paaTrykk( o, trykk )
 end
 M.paaTrykk = paaTrykk
 
+-- Knapper i ny stil. Øvelsene oppgir fortsatt de gamle bildenavnene;
+-- de gjøres om til tekst og farge her.
+local KNAPPER = {
+	["knapp_opp.png"] = { "Bar up", "bla" },
+	["knapp_ned.png"] = { "Bar down", "bla" },
+	["knapp_igjen.png"] = { "Again", "gronn", "igjen" },
+	["knapp_games.png"] = { "Events", "jord", "liste" },
+}
+
 function M.knapp( forelder, bilde, x, y, trykk )
-	local k = display.newImageRect( forelder, bilde, 109, 45 )
-	k.x, k.y = x, y
+	local v = KNAPPER[bilde] or { bilde, "jord" }
+	local k = ui.knapp( forelder, { tekst = v[1], ikon = v[3], x = x, y = y, bredde = v[3] and 160 or 140,
+		hoyde = 50, farge = v[2], storrelse = 19 } )
 	paaTrykk( k, trykk )
 	return k
 end
 
--- Pil tilbake til minispillmenyen, samme bilde som i banevalget.
+local function tilMeny()
+	local ok, err = pcall( composer.gotoScene, "scenes.minispill", { effect = "fade", time = 400 } )
+	if not ok then
+		print( "CRASH going to minispill: " .. tostring( err ) )
+	end
+end
+
+-- Tilbake til minispillmenyen, samme runde knapp som ellers i spillet.
 function M.tilbake( forelder )
-	local p = display.newImageRect( forelder, "tilbake.png", 200, 150 )
-	p.width, p.height = 80, 60
-	p.x, p.y = display.screenOriginX + 55, 42
-	paaTrykk( p, function()
-		local ok, err = pcall( composer.gotoScene, "scenes.minispill", { effect = "fade", time = 400 } )
-		if not ok then
-			print( "CRASH going to minispill: " .. tostring( err ) )
-		end
-	end )
-	return p
+	-- ui.trykkbar tar hele trykket, så det ikke også starter løpet
+	return ui.rundKnapp( forelder, "tilbake", ui.VENSTRE + 40, 36, 56, tilMeny )
 end
 
 -- Hele skjermen tar imot trykk og sender dem til marken, som i banene
@@ -203,16 +225,24 @@ function M.kamera( forelder, bakgrunn )
 	forelder:insert( ytre )
 	local kamera = perspective.createView()
 	ytre:insert( kamera )
+	-- Zoom: banene viser verden i 0,6. Øvelsene var 0,36 (marken ble
+	-- veldig liten); 0,48 fra 2026-10-28 viser marken tydeligere og nok
+	-- av løypa foran.
+	local ZOOM_YTRE = 0.8
+	local z = 0.6 * ZOOM_YTRE
 	kamera.xScale, kamera.yScale = 0.6, 0.6
-	ytre.xScale, ytre.yScale = 0.6, 0.6
+	ytre.xScale, ytre.yScale = ZOOM_YTRE, ZOOM_YTRE
 	-- I banene havner fokuset øverst til venstre (0,36 x midten av
 	-- skjermen), fordi bakken der går nedover mot høyre. Øvelsene er
 	-- flate, så hele kameraet flyttes til marken står litt til venstre
 	-- for midten og litt under, med bakken synlig foran.
-	ytre.x = M.B * 0.33 - display.contentCenterX * 0.36
-	ytre.y = M.H * 0.6 - display.contentCenterY * 0.36
+	ytre.x = M.B * 0.33 - display.contentCenterX * z
+	ytre.y = M.H * 0.6 - display.contentCenterY * z
 	local verden = display.newGroup()
 	kamera:add( verden, 1, false )
+	-- mørkt felt bak tekstene øverst, så de kan leses mot arenaen
+	local felt = display.newRoundedRect( forelder, ui.CX, 66, 700, 116, 26 )
+	felt:setFillColor( ui.F.jordMork[1], ui.F.jordMork[2], ui.F.jordMork[3], 0.72 )
 	-- banene setter grenser rundt hele banen; her er løypene i
 	-- negative koordinater også, så ingen grenser
 	kamera:setBounds( -1e7, 1e7, -1e7, 1e7 )
@@ -221,7 +251,7 @@ function M.kamera( forelder, bakgrunn )
 	if bakgrunn then
 		local lag1 = kamera:layer( 1 )
 		kamera.bakgrunnLytter = function()
-			if lag1.x then bakgrunn:rull( -lag1.x * 0.36 ) end
+			if lag1.x then bakgrunn:rull( -lag1.x * z ) end
 		end
 		Runtime:addEventListener( "enterFrame", kamera.bakgrunnLytter )
 	end
@@ -234,22 +264,23 @@ function M.kamera( forelder, bakgrunn )
 	return kamera, verden
 end
 
--- Resultatpanel (steinpanelet fra pausemenyen) med knapper.
+-- Resultatpanel med knapper (ny stil).
 function M.resultat( forelder, linjer, igjen )
 	local g = display.newGroup()
 	forelder:insert( g )
-	local panel = display.newImageRect( g, "pausemenu.png", 520, 260 )
-	panel.x, panel.y = M.B / 2, M.H / 2 - 20
+	local px, py = M.B / 2, M.H / 2 - 10
+	ui.panel( g, px, py, 540, 290 )
 	for i, l in ipairs( linjer ) do
-		M.tekst( g, l[1], panel.x, panel.y - 85 + ( i - 1 ) * 38, l[2] or 24, l[3] )
+		local f = l[3]
+		if i == 1 then f = f or ui.F.gull end
+		M.tekst( g, l[1], px, py - 96 + ( i - 1 ) * 40, l[2] or 24, f )
 	end
-	M.knapp( g, "knapp_igjen.png", panel.x - 70, panel.y + 80, function()
+	M.knapp( g, "knapp_igjen.png", px - 95, py + 92, function()
 		display.remove( g )
 		igjen()
 	end )
-	M.knapp( g, "knapp_games.png", panel.x + 70, panel.y + 80, function()
-		composer.gotoScene( "scenes.minispill", { effect = "fade", time = 400 } )
-	end )
+	M.knapp( g, "knapp_games.png", px + 95, py + 92, tilMeny )
+	ui.sprett( g, 0 )
 	return g
 end
 

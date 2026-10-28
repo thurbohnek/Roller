@@ -148,12 +148,12 @@ def eng_stripe(n, lag, rng):
     ned = (yy - topp[None, :]).clip(0)
     gress = [hexf("6CCB5F"), hexf("8FCF8A"), hexf("A9D3B4")][lag - 1]
     gress_m = [hexf("3E9A47"), hexf("6BAE78"), hexf("8DBDA4")][lag - 1]
-    jord = [hexf("8A5A34"), hexf("9C8070"), hexf("A9A0A0")][lag - 1]
-    t = np.clip(ned / 120, 0, 1)
+    jord = [hexf("9E7A5C"), hexf("AFA39A"), hexf("BFC6CC")][lag - 1]   # blekere jo lenger unna
+    t = np.clip(ned / 40, 0, 1)            # gresset er en tynn kant
     rgb = gress[None, None] * (1 - t[..., None]) + gress_m[None, None] * t[..., None]
-    t2 = np.clip((ned - 260) / 400, 0, 1)
+    t2 = np.clip((ned - 45) / 140, 0, 1)    # så jord
     rgb = rgb * (1 - t2[..., None]) + jord[None, None] * t2[..., None]
-    rgb *= (1 + 0.04 * stoy(rng, 80))[..., None]
+    rgb *= (1 + 0.02 * stoy(rng, 80))[..., None]
     lysrand = (ned > 0) & (ned < 8)
     rgb[lysrand] = mix(gress, hexf("FFFFFF"), 0.35)
     alfa = nd.gaussian_filter(fast.astype(float), 1.0)
@@ -164,15 +164,18 @@ def eng_stripe(n, lag, rng):
     if lag == 3:
         # skyer høyt oppe
         sky = Image.new("RGBA", (W * 3, H), (0, 0, 0, 0))
-        d = ImageDraw.Draw(sky)
         for _ in range(3):
+            # hver sky i sitt eget lag, så den flate undersiden ikke kutter naboskyer
+            en = Image.new("RGBA", (W * 3, H), (0, 0, 0, 0))
+            d = ImageDraw.Draw(en)
             cx = rng.uniform(0, W) + W
             cy = rng.uniform(0.12, b0 - 0.05) * H
             for j in range(9):
                 dx = (j - 4) * 32 + rng.uniform(-10, 10)
                 r = rng.uniform(55, 95) * (1 - abs(j - 4) / 7)
                 d.ellipse((cx + dx - r, cy - r, cx + dx + r, cy + r * 0.6), fill=(255, 255, 255, 235))
-            d.rectangle((cx - 150, cy + 10, cx + 150, cy + 60), fill=(0, 0, 0, 0))
+            d.rectangle((cx - 200, cy + 10, cx + 200, cy + 80), fill=(0, 0, 0, 0))
+            sky.alpha_composite(en)
         sky = sky.filter(ImageFilter.GaussianBlur(2))
         a = np.asarray(sky)
         samlet = np.maximum(np.maximum(a[:, :W], a[:, W:2 * W]), a[:, 2 * W:])

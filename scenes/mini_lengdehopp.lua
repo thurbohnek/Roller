@@ -106,7 +106,7 @@ function scene:create( event )
 	sport.merke( verden, KANTX - 12, KANTY, "Line", 36 )
 	-- sandgropa i samme høyde, og stein bak den
 	local grop = sport.terreng( verden, { { KANTX, KANTY }, { KANTX + 1000, KANTY } },
-		{ farge = { 0.62, 0.42, 0.24 } } )
+		{ farge = { 0.93, 0.8, 0.5 } } )  -- sand
 	sport.terreng( verden, { { KANTX + 1000, KANTY }, { KANTX + 4000, KANTY } } )
 	for m = 1, 9 do
 		sport.merke( verden, KANTX + m * PX_PER_M, KANTY, m .. "", 30 )

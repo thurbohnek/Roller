@@ -195,7 +195,7 @@ function M.ikon( forelder, navn, x, y, storrelse )
 end
 
 -- Lite trykk-lyd (fins ikke ennå; plass til den her).
-local function klikk() end
+local function klikk() require( "lib.lyd" ).spill( "klikk" ) end
 
 -- Knapp som reagerer på touch: krymper litt når den trykkes, og utløser
 -- ved slipp over knappen. Tar hele trykket, så ingenting under reagerer.

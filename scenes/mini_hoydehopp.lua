@@ -132,12 +132,12 @@ function scene:create( event )
 		local s = display.newRect( verden, LISTEX + 24, y, 28, 4 )
 		s:setFillColor( 0.9, 0.82, 0.7 )
 		local t = display.newText( { parent = verden, text = string.format( "%.1f", m ), x = LISTEX + 70, y = y,
-			font = native.systemFontBold, fontSize = 26 } )
+			font = require( "lib.ui" ).SKRIFT_FET, fontSize = 26 } )
 		t:setFillColor( 0.9, 0.82, 0.7 )
 	end
 	-- liten bakke, flatt, og matta bak lista
 	sport.terreng( verden, { { -300, -300 * TAN + 230 }, { BAKKE, GULVY }, { LISTEX + 60, GULVY } } )
-	sport.terreng( verden, { { LISTEX + 60, GULVY }, { LISTEX + 700, GULVY } }, { farge = { 0.55, 0.36, 0.2 } } )
+	sport.terreng( verden, { { LISTEX + 60, GULVY }, { LISTEX + 700, GULVY } }, { farge = { 0.36, 0.66, 0.92 } } )  -- blå matte
 	sport.terreng( verden, { { LISTEX + 700, GULVY }, { LISTEX + 3000, GULVY } } )
 
 	sport.tekst( grp, "High jump", sport.B / 2, 30, 30 )
@@ -155,8 +155,8 @@ function scene:create( event )
 		end
 		return tilstand == "tillop"
 	end )
-	opp = sport.knapp( grp, "knapp_opp.png", display.screenOriginX + 90, sport.H / 2 - 50, function() endreHoyde( STEG ) end )
-	ned = sport.knapp( grp, "knapp_ned.png", display.screenOriginX + 90, sport.H / 2 + 5, function() endreHoyde( -STEG ) end )
+	opp = sport.knapp( grp, "knapp_opp.png", display.screenOriginX + 90, sport.H / 2 - 40, function() endreHoyde( STEG ) end )
+	ned = sport.knapp( grp, "knapp_ned.png", display.screenOriginX + 90, sport.H / 2 + 22, function() endreHoyde( -STEG ) end )
 	sport.tilbake( grp )
 	nyttForsok()
 

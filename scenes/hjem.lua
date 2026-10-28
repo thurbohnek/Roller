@@ -114,6 +114,7 @@ local function visGave( forelder, gave )
 		bredde = 260, hoyde = 62, trykk = function()
 			framgang.hentGave()
 			require( "lib.oppdrag" ).hendelse( "gave", 1 )
+			require( "lib.lyd" ).spill( "gave" )
 			oppdaterDraaper()
 			if gaveKnapp then
 				transition.cancel( gaveKnapp )
