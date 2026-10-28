@@ -122,7 +122,7 @@ local function utseende( art )
 		local eier = opp.eier( art, v.id )
 		local kort = ui.panel( innhold, x, y, 118, 164, { radius = 18, lys = valgt } )
 		if art == "drakt" then
-			lagMark( innhold, x + 52, y - 34, 0.95, v.id, "ingen", 3 )
+			lagMark( innhold, x + 38, y - 34, 0.72, v.id, "ingen", 3 )
 		else
 			local hode = display.newImageRect( innhold, opp.drakt( "hode.png" ), 30, 25 )
 			hode.x, hode.y = x, y - 30
