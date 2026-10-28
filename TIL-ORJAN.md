@@ -3919,3 +3919,27 @@ starter etter en oppdatering, og et varsel i spillet når en ny versjon
 er klar. Oppsummeringen skrives i `lib/nyheter.lua` for hver oppdatering.
 Varselet kommer av seg selv: spillet sjekker `versjon.txt` på nettsiden
 hvert andre minutt og viser en liten lapp nede til venstre.
+
+## 2026-10-28, ny grafisk stil, fase 1
+
+Mathias vil gjøre Roller til et fullverdig spill for Android og iPhone,
+med helt ny grafikk, men med samme fysikk og samme måte marken beveger
+seg på. Det skal også ha ting å samle, belønninger og oppgraderinger. Han
+valgte stilen ut fra skisser: lys eng i bane 1-2 og varm jordhule videre
+nedover. I stedet for ringer blir det duggdråper som penger og
+markeunger som skal reddes, tre i hver bane.
+
+Backup av alt før redesignet ligger i grenen
+`backup-for-redesign-2026-10-28`.
+
+Fase 1 er ferdig:
+- Markens hjem under enga er ny meny.
+- Nytt banevalg, som en sti fra enga og ned i dypet.
+- Nye pause-, døds- og fullført-skjermer, innstillinger, Controls og
+  reklame-for-liv. Kjøp for ekte penger er tatt ut; dråper kan byttes mot
+  forsøk.
+- Daglig gave og nytt skjermbilde under spill.
+- Ny skrift (Fredoka, fri lisens) og egne ikoner.
+
+Banegrafikken, marken og samleobjektene kommer i fase 2, og butikken og
+oppdragene i fase 3.

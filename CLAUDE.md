@@ -36,5 +36,9 @@
   ny versjon er klar kommer av seg selv (`lib/oppdatering.lua` sjekker
   `versjon.txt` som byggingen legger ut).
 
+- **Alt grensesnitt bygges med `lib/ui.lua`** (farger, skrift, knapper,
+  paneler, ikoner), og nye ikoner og bakgrunner tegnes i
+  `Util/grafikk/lag_ui.py`, så stilen er lik overalt.
+
 Se `KODEBASE.md` for hvordan koden henger sammen og `SPILLIDE.md` for
 spillideen.

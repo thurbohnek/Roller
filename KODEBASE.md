@@ -1007,6 +1007,57 @@ fra før denne datoen er historikk.
   svarer med feil. Et bygg feilet 2026-09-29 fordi nedlastingen ga 92
   byte.
 
+## Ny grafisk stil, fase 1 (2026-10-28)
+
+Backup før redesignet: grenen `backup-for-redesign-2026-10-28` på GitHub.
+
+Stilen er en blanding av lys eng (bane 1-2) og varm jordhule (bane 3-9 og
+menyene, som ligger i markens hjem under bakken). Valgt av Mathias etter
+skisser av tre stiler.
+
+- **`lib/ui.lua`** er det felles grafiske systemet: farger (`ui.F`),
+  knappefarger (`ui.KNAPP`), skrifta Fredoka (`Fredoka-*.ttf`, lisens i
+  `OFL-Fredoka.txt`), `ui.tekst`, `ui.tittel`, `ui.knapp`, `ui.rundKnapp`,
+  `ui.pille`, `ui.panel`, `ui.hinne`, `ui.ikon`, `ui.bakgrunn`, `ui.inn`
+  og `ui.sprett`. Alt nytt grensesnitt bygges med disse.
+- **`Util/grafikk/lag_ui.py`** tegner ikonene i `ui/` (128 px, vist i 64
+  eller mindre), `pauseknapp.png` og bakgrunnene `ui/hjem_bg.jpg` og
+  `ui/banevalg_bg.jpg`. Bakgrunnene er 1200 x 720 enheter med innholdet
+  (960 x 540) i midten, så de dekker 4:3 til 20:9 uten skalering.
+  Rommene i hjemmet og stoppene i banevalget står både i skriptet og i
+  Lua-scenene, og må endres begge steder.
+- **Scener:** `scenes/hjem.lua` (ny meny; `gotomenu` går hit),
+  `scenes/banevalg.lua` (erstatter rutenettet i `chooselevel`;
+  `gotochooselevel` går hit), `scenes/fullfort.lua` (overlay når målet
+  nås, i stedet for `gotonextlevel` direkte), og nye utgaver av
+  `pausemenu1`, `dodmenu1`, `adoffer`, `innstillinger` og `minispill`.
+  Spillereglene er de samme: å forlate en bane fra pause eller død koster
+  ett forsøk (`lib/navigasjon.lua` `forlatBane`).
+- **Under spill:** `lib/hud.lua` lager en gruppe i banegruppa som regner
+  seg tilbake fra 0,6-skaleringen hvert bilde. Banepille øverst til
+  venstre, forsøk (`lib/liv.lua`) og pauseknapp øverst til høyre.
+  Banefilene kaller `hud.pauseKnapp( knapp1 )`; `camera:add( knapp1, 2 )`
+  er kommentert bort i bane 1 og 5-9.
+- **`lib/framgang.lua`**: dråper (pengene), reddede unger per bane,
+  fullførte baner og daglig gave (20, 30, 40, 60, 80, 100, 150 dråper,
+  dag 1-7 på rad). `lm.unlockNextLevel()` registrerer fullført bane.
+- **`lib/lasting.lua`**: lasteskjerm for `gotomenu`, `gotoretry`,
+  `gotolevel1`, `gotochooselevel` og `gotonextlevel`.
+- `build.settings` holder `Util/`, `*.md` og `*.py` utenfor spillet.
+
+**Rettet underveis:** en ny spiller fikk krasj første gang et mål ble
+nådd, fordi `levelInfo.locked` bare ble laget av det gamle banevalget.
+
+**Ikke brukt lenger** (slettes når fase 2 er ferdig): `scenes/menu.lua`,
+`scenes/chooselevel.lua`, `scenes/kontroller.lua` og de gamle
+knappebildene (`pausemenu*.png`, `knapp_*.png`, `*knapp.png` unntatt
+`pauseknapp.png`).
+
+**Neste faser:**
+2. Ny banegrafikk for bane 1-9 og Worm athletics (bane 1-2 på enga, 3-9
+   under jorda), ny mark, og dråper og markeunger plassert i banene.
+3. Butikken (markens evner og utseende for dråper) og ukentlige oppdrag.
+
 ## Mørket i hulen (2026-09-28)
 
 `lib/morke.lua` legger et mørkt lag over banen, tettere for hver bane
