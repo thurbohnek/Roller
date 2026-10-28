@@ -1115,6 +1115,29 @@ de to lengste hoppene. Unge 1 i et søkk tidlig, unge 2 i toppen av en
 hoppbue midt i banen, unge 3 høyt mot slutten. Funne unger følger etter
 marken resten av banen (bare grafikk).
 
+**Sjekkpunkter (2026-10-29):** `lib/sjekkpunkt.lua`. `lag_samling.py`
+velger opptil 3 per bane, litt før lange hopp (≥ 250 enheter) og store
+fall, på en flate der hele marken får plass. Posisjonene står i
+`lib/samleN.lua` (`sjekkpunkter`). Marken må starte i (0, 0), så hele
+banen flyttes: bane 1-4 trekker `SJ` (fra `sjekkpunkt.forskyvning`) fra
+flis 1, målet og dødslinja; bane 5-9 gjør det i `lib/teststart.lua`
+(sjekkpunkt går foran teststart). Flagget tegnes og sjekkes i
+`lib/samling.lua`. Sjekkpunktet huskes bare i minnet og nullstilles når
+banen klares, når den velges i banevalget og i hjemmet.
+
+**Pynt (2026-10-29):** blomster, gress, sopp, krystaller og stein
+(`ui/pynt/`, tegnet i `lag_ui.py`), plassert langs veien av
+`lag_samling.py` (`pynt` i `samleN.lua`) og lagt bak flisene av
+`lib/samling.lua`.
+
+**Ungene som følger etter** er små kopier av marken (55 %) som spiller av
+marken sin positur fra 26, 52 og 78 bilder siden (`lib/samling.lua`).
+
+**Musikk (2026-10-29):** CC0-spor fra OpenGameArt i `lyd/musikk/`
+(kilder i `lyd/musikk/KILDER.txt`), spilt av `lyd.musikk( "meny" | "eng" |
+"hule" | "arena" )` på kanal 2; hulene veksler mellom to spor.
+Naturlydene ligger svakt under på kanal 1. Egen av/på i Settings.
+
 **Lyd:** `Util/grafikk/lag_lyd.py` syntetiserer alle lydene (ingen
 lisens å ta vare på) til `lyd/`. `lib/lyd.lua` spiller dem:
 `lyd.spill( "klikk" | "draape" | "unge" | "mal" | "dod" | "kjop" | "gave" )`.

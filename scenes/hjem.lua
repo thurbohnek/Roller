@@ -137,6 +137,8 @@ function scene:create( event )
 
 	ui.bakgrunn( grp, "ui/hjem_bg.jpg" )
 	require( "lib.lyd" ).bakgrunn( "eng" )
+	require( "lib.lyd" ).musikk( "meny" )
+	require( "lib.sjekkpunkt" ).nullstill()
 
 	-- tittel på himmelen
 	ui.tittel( grp, "Roller", ui.CX, 62, 64, ui.F.krem, ui.F.jord )

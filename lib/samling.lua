@@ -27,6 +27,7 @@ local framgang = require( "lib.framgang" )
 local oppgradering = require( "lib.oppgradering" )
 local oppdrag = require( "lib.oppdrag" )
 local lyd = require( "lib.lyd" )
+local sjekkpunkt = require( "lib.sjekkpunkt" )
 
 local M = {}
 
@@ -68,6 +69,20 @@ function M.lag( bane, camera, firkant1, deler )
 	siste = { bane = bane, draaper = 0, unger = { false, false, false } }
 	local tidligere = framgang.unger( bane )
 	local rad, tall, plasser = hudRad( bane, tidligere )
+
+	-- Pynt langs bakken (blomster, gress, sopp, krystaller). Legges bakerst
+	-- i kameralaget, bak flisene, så foten forsvinner ned i bakken.
+	for _, pn in ipairs( data.pynt or {} ) do
+		local ok, bilde = pcall( display.newImageRect, "ui/pynt/" .. pn[1] .. ".png", pn[4], pn[4] )
+		if ok and bilde then
+			bilde.anchorY = 1
+			bilde.x, bilde.y = firkant1.x + pn[2], firkant1.y + pn[3]
+			bilde.rotation = pn[5]
+			if math.random() < 0.5 then bilde.xScale = -1 end
+			camera:add( bilde, 1, false )
+			bilde:toBack()
+		end
+	end
 
 	local ting = {}
 	local holder = display.newGroup()      -- for å vite når banen rives
@@ -113,23 +128,86 @@ function M.lag( bane, camera, firkant1, deler )
 		pil.isVisible = false
 	end
 
+	-- Sjekkpunktene: et flagg på bakken midt under der marken startes.
+	-- Passerer marken det, er sjekkpunktet nådd (lib/sjekkpunkt.lua).
+	local flagg = {}
+	for i, sp in ipairs( data.sjekkpunkter or {} ) do
+		local g = display.newGroup()
+		camera:add( g, 1, false )
+		g.x, g.y = firkant1.x + sp.lx - 100, firkant1.y + sp.ly + 46
+		local stang = display.newRoundedRect( g, 0, -60, 8, 120, 4 )
+		stang:setFillColor( unpack( ui.F.jordLys ) )
+		local duk = display.newPolygon( g, 34, -100, { 0, -26, 60, 0, 0, 26 } )
+		local glod = display.newCircle( g, 30, -100, 56 )
+		glod:setFillColor( 1, 0.85, 0.4, 0.25 )
+		glod.isVisible = false
+		duk:toFront()
+		local nadd = ( sjekkpunkt.aktiv( bane ) or 0 ) >= i
+		local function farg( paa )
+			if paa then duk:setFillColor( unpack( ui.F.gull ) ) else duk:setFillColor( 0.55, 0.5, 0.45 ) end
+			duk.strokeWidth = 4
+			duk:setStrokeColor( unpack( paa and ui.F.kant or { 0.3, 0.25, 0.2 } ) )
+			glod.isVisible = paa
+		end
+		farg( nadd )
+		flagg[i] = { g = g, x = firkant1.x + sp.lx, nadd = nadd, farg = farg }
+	end
+
+	local function nadd( i )
+		local f = flagg[i]
+		f.nadd = true
+		f.farg( true )
+		sjekkpunkt.sett( bane, i )
+		lyd.spill( "gave" )
+		local h = hud.gruppe()
+		local t = ui.tittel( h, "Checkpoint!", ui.CX, ui.TOPP + 120, 40, ui.F.gull, ui.F.jordMork )
+		t.alpha = 0
+		transition.to( t, { time = 250, alpha = 1, y = t.y - 10 } )
+		transition.to( t, { delay = 1300, time = 400, alpha = 0, onComplete = function() display.remove( t ) end } )
+	end
+
 	local skitten = false
 	local sistLagret = system.getTimer()
 
-	-- Ungene som er funnet i runden, følger etter marken: små ringer som
-	-- ruller etter halen (del1) med litt forsinkelse. Bare grafikk.
+	-- Ungene som er funnet i runden, følger etter marken på rekke: små
+	-- kopier av marken (alle ni ledd) som spiller av nøyaktig det marken
+	-- gjorde litt tidligere, samme vei, samme rulling og strekking. Bare
+	-- grafikk, ingen fysikk.
 	local folgere = {}
-	local spor = {}            -- halens posisjoner de siste bildene
-	local SPOR_STEG = 9        -- bilder mellom hver følger
+	local spor = {}            -- marken sin positur de siste bildene (nyeste først)
+	local AVSTAND = 26         -- bilder mellom hver i rekka
+	local SKALA = 0.55         -- ungene er litt over halvparten så store
+	local BILDER = { { "hale.png", 27, 17 } }
+	for i = 2, 8 do BILDER[i] = { "del1.png", 34, 17 } end
+	BILDER[9] = { "hode.png", 30, 25 }
 
 	local function nyFolger()
-		local f = ui.ikon( display.newGroup(), "unge", 0, 0, 40 )
-		local g = f.parent
+		local g = display.newGroup()
 		camera:add( g, 1, false )
-		g.x, g.y = deler[1].x, deler[1].y - 20
-		g.xScale, g.yScale = 0.1, 0.1
-		transition.to( g, { time = 350, xScale = 1, yScale = 1, transition = easing.outBack } )
+		g.deler = {}
+		for i = 1, 9 do
+			local b = BILDER[i]
+			local d = display.newImageRect( g, "mark/rosa/" .. b[1], b[2] * SKALA, b[3] * SKALA )
+			d.isVisible = false
+			g.deler[i] = d
+		end
+		g.alpha = 0
+		transition.to( g, { time = 400, alpha = 1 } )
 		folgere[#folgere + 1] = g
+	end
+
+	-- Tegner ungen g i marken sin positur fra n bilder siden: leddene samles
+	-- rundt midten (ledd 5) og flyttes litt ned, så den lille marken står på
+	-- bakken der den store sto.
+	local function tegnFolger( g, positur )
+		local mx, my = positur[5][1], positur[5][2] + ( 1 - SKALA ) * 32
+		for i = 1, 9 do
+			local p, d = positur[i], g.deler[i]
+			d.x = mx + ( p[1] - positur[5][1] ) * SKALA
+			d.y = my + ( p[2] - positur[5][2] ) * SKALA
+			d.rotation = p[3]
+			d.isVisible = true
+		end
 	end
 
 	-- små gnister som spruter ut fra (x, y) i verden
@@ -200,17 +278,18 @@ function M.lag( bane, camera, firkant1, deler )
 		end
 		local tid = system.getTimer()
 		local mx, my = deler[5].x, deler[5].y
+		for i, f in ipairs( flagg ) do
+			if not f.nadd and mx > f.x + 40 then nadd( i ) end
+		end
 		-- følgerne
-		if deler[1].x then
-			table.insert( spor, 1, { deler[1].x, deler[1].y } )
-			if #spor > SPOR_STEG * 4 then spor[#spor] = nil end
+		if deler[1].x and deler[9].x then
+			local positur = {}
+			for i = 1, 9 do positur[i] = { deler[i].x, deler[i].y, deler[i].rotation } end
+			table.insert( spor, 1, positur )
+			if #spor > AVSTAND * 3 + 1 then spor[#spor] = nil end
 			for k, g in ipairs( folgere ) do
-				local p = spor[math.min( #spor, k * SPOR_STEG )]
-				if p and g.parent then
-					local dx = p[1] - g.x
-					g.x, g.y = p[1], p[2] - 16
-					g.rotation = g.rotation + dx * 2.5
-				end
+				local positur = spor[math.min( #spor, k * AVSTAND )]
+				if positur and g.parent then tegnFolger( g, positur ) end
 			end
 		end
 		for _, t in ipairs( ting ) do

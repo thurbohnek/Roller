@@ -57,10 +57,13 @@ def verden(n):
     by = max(cy + FH for cx, cy in fliser)
     W, H = (bx - ox) // 2 + 2, (by - oy) // 2 + 2
     rast = np.zeros((H, W), bool)
+    global IS
+    IS = np.zeros((H, W), bool)          # is (til pynten, som ikke skal stå på is)
     for k, (cx, cy) in enumerate(fliser, 1):
-        m = np.asarray(Image.open(os.path.join(MASKER, "level%d_%d.png" % (n, k)))) > 0
+        mm = np.asarray(Image.open(os.path.join(MASKER, "level%d_%d.png" % (n, k))))
         x0, y0 = (cx - FW - ox) // 2, (cy - FH - oy) // 2
-        rast[y0:y0 + FH, x0:x0 + FW] |= m
+        rast[y0:y0 + FH, x0:x0 + FW] |= mm > 0
+        IS[y0:y0 + FH, x0:x0 + FW] |= mm == 2
     return rast, (ox, oy), fliser, maal
 
 
@@ -309,6 +312,79 @@ def plasser(n, vis=False):
     # 3: mot slutten, høyt over bakken (et lite hopp for å nå den)
     x, y = over_bakken(ved(0.9), UNGE_HOYDE + 50)
     unger.append([x, y])
+    # -- sjekkpunkter: før de vanskelige partiene (lange hopp og store fall).
+    # Marken startes der ved å flytte hele banen (som teststart), så stedet
+    # må ha plass til hele marken (x -230..+20 fra halen) uten bakke eller
+    # tak, med bakke under hele marken.
+    H, W = rast.shape
+
+    def startsted(i):
+        """Halen (del1) sitt startpunkt i verden over veipunkt i, eller None."""
+        x, y = p[i]
+        x0, x1 = x - 118, x + 12            # marken i piksler (2 enheter per piksel)
+        if x0 < 0 or x1 >= W:
+            return None
+        topp = []
+        for xx in range(x0, x1 + 1, 2):
+            kol = rast[max(0, y - 120):min(H, y + 160), xx]
+            treff = np.nonzero(kol)[0]
+            if len(treff) == 0:
+                return None
+            topp.append(max(0, y - 120) + treff[0])
+        hoyest = min(topp)
+        if max(topp) - hoyest > 70:          # for bratt eller ujevnt
+            return None
+        sy = hoyest - 24                     # marken litt over bakken
+        if rast[max(0, sy - 40):sy + 10, x0:x1 + 1].any():
+            return None                      # tak eller bakke i veien
+        return x * 2 + ox, sy * 2 + oy
+
+    vanskelige = [h for h in hopp if abs(h[2][0] - h[1][0]) >= 250 or abs(h[2][1] - h[1][1]) >= 500]
+    sjekkpunkter = []
+    for i, a, b in sorted(vanskelige, key=lambda h: h[0]):
+        if lengde[i] < 2500 or lengde[i] > total - 1500:
+            continue
+        if sjekkpunkter and lengde[i] - sjekkpunkter[-1][2] < max(3000, total / 4.2):
+            continue
+        funnet = None
+        for foran in range(350, 1400, 50):
+            k = max(0, min(range(len(lengde)), key=lambda q: abs(lengde[q] - (lengde[i] - foran))))
+            if any(q in hoppstart for q in range(max(0, k - 30), k + 1)):
+                continue
+            st = startsted(k)
+            if st:
+                funnet = (st, k)
+                break
+        if funnet:
+            (sx, sy), k = funnet
+            sjekkpunkter.append((sx, sy, lengde[k]))
+        if len(sjekkpunkter) == 3:
+            break
+
+    # -- pynt langs bakken (lib/pynt.lua): navn, x, y (foten), størrelse, vinkel
+    if n <= 2:
+        typer = ["gress"] * 4 + ["blomst_gul", "blomst_rosa", "blomst_hvit"] * 2 + ["sopp", "stein"]
+    elif n <= 5:
+        typer = ["stein"] * 3 + ["sopp"] * 2 + ["sopp_glod"] * 2 + ["krystall_bla"]
+    else:
+        typer = ["sopp_glod"] * 3 + ["krystall_bla"] * (4 if n == 7 else 2) + ["krystall_lilla"] * 2 + ["stein"]
+    pynt = []
+    s_p = 200.0
+    while s_p < total - 100:
+        k = min(range(len(lengde)), key=lambda q: abs(lengde[q] - s_p))
+        s_p += rng.uniform(140, 420)
+        if any(q in hoppstart for q in range(max(0, k - 8), k + 8)):
+            continue
+        x, y = p[k]
+        if IS[y:y + 12, max(0, x - 6):x + 6].any():
+            continue
+        nx, ny = normal(rast, x, y)
+        vinkel = math.degrees(math.atan2(nx, -ny)) * 0.5      # planter vokser nesten rett opp
+        vinkel = max(-30, min(30, vinkel))
+        wx, wy = x * 2 + ox, y * 2 + oy + 10                    # litt ned i bakken
+        navn = typer[int(rng.integers(0, len(typer)))]
+        pynt.append((navn, wx, wy, rng.uniform(55, 95), vinkel))
+
     # ingen blader oppå ungene
     blader = [b for b in blader if all(math.hypot(b[0] - u[0], b[1] - u[1]) > 80 for u in unger)]
 
@@ -325,10 +401,22 @@ def plasser(n, vis=False):
         f.write("    },\n    unger = {\n")
         for x, y in unger:
             f.write("        { %d, %d },\n" % lokal(x, y))
+        f.write("    },\n")
+        f.write("    -- pynt: { navn, x, y (foten), storrelse, vinkel }\n    pynt = {\n")
+        for navn, x, y, st, v in pynt:
+            lx, ly = lokal(x, y)
+            f.write("        { \"%s\", %d, %d, %d, %d },\n" % (navn, lx, ly, st, v))
+        f.write("    },\n")
+        f.write("    -- sjekkpunkter: halens startpunkt i verden (som i banefila, uten\n")
+        f.write("    -- teststart) og samme punkt fra sentrum av flis 1 (til flagget)\n")
+        f.write("    sjekkpunkter = {\n")
+        for sx, sy, _ in sjekkpunkter:
+            lx, ly = lokal(sx, sy)
+            f.write("        { x = %d, y = %d, lx = %d, ly = %d },\n" % (round(sx), round(sy), lx, ly))
         f.write("    },\n}\n")
     sum_verdi = sum(b[2] for b in blader)
-    print("bane %d: vei %d enheter, %d hopp, %d blader (verdi %d), %d søkk" % (
-        n, total, len(hopp), len(blader), sum_verdi, len(valgte_sokk)))
+    print("bane %d: vei %d enheter, %d hopp, %d blader (verdi %d), %d søkk, %d sjekkpunkter" % (
+        n, total, len(hopp), len(blader), sum_verdi, len(valgte_sokk), len(sjekkpunkter)))
 
     if vis:
         sk = 8
@@ -342,6 +430,9 @@ def plasser(n, vis=False):
         for x, y in unger:
             px, py = (x - ox) / 2 / sk, (y - oy) / 2 / sk
             d.ellipse((px - 5, py - 5, px + 5, py + 5), fill=(255, 100, 160))
+        for sx, sy, _ in sjekkpunkter:
+            px, py = (sx - ox) / 2 / sk, (sy - oy) / 2 / sk
+            d.rectangle((px - 15, py - 4, px + 1, py + 1), fill=(255, 60, 60))
         mx, my = (maal[0] - ox) / 2 / sk, (maal[1] - oy) / 2 / sk
         d.line([(mx + 132, my - 132), (mx - 132, my + 132)], fill=(0, 255, 0), width=2)
         return im

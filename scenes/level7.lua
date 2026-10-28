@@ -16,7 +16,7 @@ local scaleFactor = 1.0
 -- langs grotta. Posisjonene til flisene, dod og mal2 kommer fra
 -- lib/baneoppsett7.lua, som genereres sammen med bildene.
 local physicsData = (require "lib.shapedefs7").physicsData(scaleFactor)
-local oppsett = require( "lib.teststart" )( require "lib.baneoppsett7" )
+local oppsett = require( "lib.teststart" )( require "lib.baneoppsett7", 7 )
 local centerX = display.contentCenterX
 local centerY = display.contentCenterY
 local screenLeft = display.screenOriginX

@@ -50,6 +50,7 @@ end
 -- bak banen: kall bg:rull( kameraX ) hvert bilde.
 function M.bakgrunn( forelder )
 	require( "lib.lyd" ).bakgrunn( "hule" )
+	require( "lib.lyd" ).musikk( "arena" )
 	local g = display.newGroup()
 	forelder:insert( g )
 	-- dekker hele skjermhøyden, også på skjermer som er høyere enn 16:9

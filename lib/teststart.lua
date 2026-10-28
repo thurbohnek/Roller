@@ -11,12 +11,18 @@
 -- Lager en ny tabell, så require-cachen for oppsettet ikke flyttes to
 -- ganger når banen startes på nytt.
 
-return function( o )
+-- Sjekkpunkt (2026-10-28): kalles med banenummeret, og er et sjekkpunkt
+-- nådd (lib/sjekkpunkt.lua), flyttes banen dit på samme måte i stedet.
+return function( o, bane )
 	local s = o.teststart
+	if bane then
+		local sj = require( "lib.sjekkpunkt" ).forskyvning( bane )
+		if sj.x ~= 0 or sj.y ~= 0 then s = sj end
+	end
 	if not s then
 		return o
 	end
-	print( "TESTSTART: banen er flyttet " .. s.x .. ", " .. s.y )
+	print( "TESTSTART/SJEKKPUNKT: banen er flyttet " .. s.x .. ", " .. s.y )
 	local n = { bakgrunn = o.bakgrunn, fliser = {} }
 	for i, f in ipairs( o.fliser ) do
 		n.fliser[i] = { x = f.x - s.x, y = f.y - s.y }

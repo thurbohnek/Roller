@@ -146,6 +146,9 @@ local sjekkUtenforBanen
 local egetKamera
 
 function scene:create( event )
+    -- Sjekkpunkt (2026-10-28): er et sjekkpunkt nådd, flyttes banen (fliser,
+    -- mål og dødslinje) så marken starter der, se lib/sjekkpunkt.lua.
+    local SJ = require( "lib.sjekkpunkt" ).forskyvning( 1 )
 checkpoint("level1:create_start")
 lm.currentLevel = 1 -- så retry vet hvilken bane den skal restarte
 
@@ -187,12 +190,12 @@ local mark = mark.hent
 
 
           local dod = display.newRect (0, 0, 70000, 50) 
-          dod.x = bredde -bredde-bredde-900
-          dod.y = hoyde
+          dod.x = bredde -bredde-bredde-900 - SJ.x
+          dod.y = hoyde - SJ.y
           dod:rotate( 31.48 ) 
           dod.myName = "dod"
           grp:insert( dod ) 
-          dod.alpha = 1
+          dod.alpha = 0   -- usynlig sensor (var synlig som en hvit strek, 2026-10-28)
           camera:add (dod,1,false)
           physics.addBody(dod, "kinematic", {isSensor = true})
           
@@ -202,8 +205,8 @@ local mark = mark.hent
           
           local mal2 = display.newRect( 0, 0, 10, 3000 )
           --mal2:setReferencePoint( display.BottomLeftReferencePoint )
-          mal2.x = 31000
-          mal2.y = 18000
+          mal2.x = 31000 - SJ.x
+          mal2.y = 18000 - SJ.y
           mal2.myName = "mal2"
           mal2:rotate(45)
           grp:insert ( mal2 )
@@ -1016,9 +1019,9 @@ local weldJoint9 = physics.newJoint( "weld", knott9, del9, knott9.x, knott9.x )
 
                                      
                                       local     firkant1 = display.newImageRect("level1/1.png", 7680,4702)
-                                                firkant1.x = 3500
+                                                firkant1.x = 3500 - SJ.x
                                                 --firkant1.x = 3850
-                                                firkant1.y = 2300
+                                                firkant1.y = 2300 - SJ.y
                                                 physics.addBody(firkant1,"static", physicsData:get("1") )
                                                 firkant1.alpha = 1  
                                                 firkant1.myName = "firkant1"                                

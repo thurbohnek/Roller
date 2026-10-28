@@ -405,6 +405,101 @@ def blad(gull=False):
     ferdig(im, "blad_gull" if gull else "blad")
 
 
+# ------------------------------------------------------------- pynt i banene
+#
+# Små tegninger som settes langs bakken av lib/pynt.lua (posisjoner fra
+# Util/grafikk/lag_samling.py). 160 x 160, foten nederst på midten, så de
+# kan stå på bakken. Lagres i ui/pynt/.
+
+def _pynt_lerret():
+    return Image.new("RGBA", (S, S), (0, 0, 0, 0))
+
+
+def _pynt_lagre(im, navn, glod=None):
+    if glod:
+        a = im.split()[3]
+        g = Image.new("RGBA", im.size, glod + (0,))
+        g.putalpha(a.point(lambda v: int(v * 0.8)).filter(ImageFilter.GaussianBlur(SS * 7)))
+        bunn = Image.new("RGBA", im.size, (0, 0, 0, 0))
+        bunn.alpha_composite(g)
+        bunn.alpha_composite(im)
+        im = bunn
+    os.makedirs(os.path.join(UT, "pynt"), exist_ok=True)
+    im.resize((160, 160), Image.LANCZOS).save(os.path.join(UT, "pynt", navn + ".png"), optimize=True)
+
+
+def pynt_blomst(navn, kronblad, midt):
+    im = _pynt_lerret()
+    d = ImageDraw.Draw(im)
+    d.line([(p(0.5), p(1.0)), (p(0.5), p(0.42))], fill=hexf("3C9A4B"), width=int(p(0.04)))
+    d.ellipse((p(0.5), p(0.66), p(0.72), p(0.76)), fill=hexf("5BC46A"))
+    cx, cy, r = p(0.5), p(0.36), p(0.1)
+    for i in range(6):
+        a = i * math.pi / 3
+        x, y = cx + math.cos(a) * r, cy + math.sin(a) * r
+        d.ellipse((x - r * 0.85, y - r * 0.85, x + r * 0.85, y + r * 0.85), fill=hexf(kronblad))
+    d.ellipse((cx - r * 0.6, cy - r * 0.6, cx + r * 0.6, cy + r * 0.6), fill=hexf(midt))
+    _pynt_lagre(im, navn)
+
+
+def pynt_gress():
+    im = _pynt_lerret()
+    d = ImageDraw.Draw(im)
+    rng = np.random.default_rng(4)
+    for i in range(9):
+        x = p(0.25 + 0.5 * i / 8)
+        h = p(rng.uniform(0.35, 0.6))
+        b = p(rng.uniform(-0.12, 0.12))
+        f = hexf(["5BC46A", "3C9A4B", "8EDB72"][i % 3])
+        d.polygon([(x - p(0.025), p(1.0)), (x + p(0.025), p(1.0)), (x + b, p(1.0) - h)], fill=f)
+    _pynt_lagre(im, "gress")
+
+
+def pynt_sopp(navn, hatt, prikker, glod=None):
+    im = _pynt_lerret()
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((p(0.42), p(0.55), p(0.58), p(1.0)), radius=p(0.05), fill=hexf("F3E6CF"))
+    d.chord((p(0.2), p(0.3), p(0.8), p(0.8)), 180, 360, fill=hexf(hatt))
+    for x, y, r in ((0.35, 0.47, 0.04), (0.55, 0.4, 0.05), (0.68, 0.5, 0.03)):
+        d.ellipse((p(x - r), p(y - r), p(x + r), p(y + r)), fill=hexf(prikker))
+    _pynt_lagre(im, navn, glod)
+
+
+def pynt_krystall(navn, lys, mork, glod):
+    im = _pynt_lerret()
+    d = ImageDraw.Draw(im)
+    for x, h, b, v in ((0.5, 0.75, 0.13, 0), (0.33, 0.48, 0.09, -14), (0.68, 0.55, 0.1, 12)):
+        cx, bunn = p(x), p(1.0)
+        r = math.radians(v)
+        def rot(dx, dy):
+            return (cx + dx * math.cos(r) - dy * math.sin(r), bunn + dx * math.sin(r) + dy * math.cos(r))
+        pts = [rot(-p(b), 0), rot(-p(b), -p(h) * 0.75), rot(0, -p(h)), rot(p(b), -p(h) * 0.75), rot(p(b), 0)]
+        d.polygon(pts, fill=hexf(mork))
+        d.polygon([pts[0], pts[1], pts[2], rot(0, 0)], fill=hexf(lys))
+    _pynt_lagre(im, navn, glod)
+
+
+def pynt_stein():
+    im = _pynt_lerret()
+    d = ImageDraw.Draw(im)
+    d.ellipse((p(0.18), p(0.55), p(0.82), p(1.08)), fill=hexf("7A7672"))
+    d.ellipse((p(0.24), p(0.6), p(0.62), p(0.85)), fill=hexf("9C9894"))
+    d.chord((p(0.18), p(0.5), p(0.82), p(0.82)), 200, 340, fill=hexf("5BAA5A"))
+    _pynt_lagre(im, "stein")
+
+
+def pynt_alle():
+    pynt_blomst("blomst_gul", "FFD054", "E0951A")
+    pynt_blomst("blomst_rosa", "F49AA8", "FFE58A")
+    pynt_blomst("blomst_hvit", "FFFFFF", "FFC53D")
+    pynt_gress()
+    pynt_sopp("sopp", "E8483E", "FFFFFF")
+    pynt_sopp("sopp_glod", "4FD1E8", "D8FBFF", glod=(80, 220, 255))
+    pynt_krystall("krystall_bla", "BFEFFF", "4FA8CF", (120, 210, 255))
+    pynt_krystall("krystall_lilla", "E5CCFF", "8C5CD8", (190, 140, 255))
+    pynt_stein()
+
+
 def pauseknapp():
     """pauseknapp.png i roten (knapp1 i banefilene): rund jordknapp med
     pause-ikon, samme stil som ui.rundKnapp. 150 x 150."""
@@ -434,6 +529,7 @@ def main():
               laas, stjerne, hake, gave, hjelp, magnet, klover, radar, flagg, pose, blad):
         f()
     blad(gull=True)
+    pynt_alle()
     lyd(False)
     lyd(True)
     print("ikoner skrevet til", UT)

@@ -36,6 +36,7 @@ end
 
 local function startBane( b )
 	lm.currentLevel = b
+	require( "lib.sjekkpunkt" ).nullstill( b )   -- fra start når banen velges
 	liv.lastliv()
 	if liv.erTom() then
 		nav.gaaTil( "scenes.adoffer" )
@@ -83,6 +84,7 @@ function scene:create( event )
 	local grp = self.view
 	ui.bakgrunn( grp, "ui/banevalg_bg.jpg" )
 	require( "lib.lyd" ).bakgrunn( "eng" )
+	require( "lib.lyd" ).musikk( "meny" )
 
 	-- en liten mark ved neste bane som venter
 	local neste = 1

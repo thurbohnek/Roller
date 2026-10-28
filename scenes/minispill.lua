@@ -22,6 +22,7 @@ function scene:create( event )
 	local grp = self.view
 	ui.bakgrunn( grp, "ui/hjem_bg.jpg" )
 	require( "lib.lyd" ).bakgrunn( "eng" )
+	require( "lib.lyd" ).musikk( "meny" )
 	ui.hinne( grp, 0.4 )
 
 	ui.rundKnapp( grp, "tilbake", ui.VENSTRE + 40, 36, 56, function() nav.gaaTil( "scenes.gotomenu" ) end )

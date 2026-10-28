@@ -1,0 +1,14 @@
+Musikken i Roller. Alle sporene er CC0 (fri, ingen krav om kreditering),
+hentet fra OpenGameArt 2026-10-28. Lydstyrken er jevnet ut (loudnorm -18 LUFS)
+og filene er gjort om til mp3 96 kbit/s.
+
+meny.mp3   "Cozy Puzzle Title" av MintoDog (loopbar)
+           https://opengameart.org/content/cozy-puzzle-title
+eng.mp3    "Apple Cider" av Zane Little Music
+           https://opengameart.org/content/apple-cider
+hule1.mp3  "Crystal Cave" (song18) av cynicmusic
+           https://opengameart.org/content/crystal-cave-song18
+hule2.mp3  "Mysterious Ambience" (song21) av cynicmusic
+           https://opengameart.org/content/mysterious-ambience-song21
+arena.mp3  "Cozy Puzzle Stage Select" av MintoDog (loopbar)
+           https://opengameart.org/content/cozy-puzzle-stage-select
