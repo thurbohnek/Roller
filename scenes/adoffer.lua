@@ -49,8 +49,7 @@ end
 
 function scene:create( event )
 	local grp = self.view
-	local bg = display.newImageRect( grp, "ui/hjem_bg.jpg", 1200, 540 )
-	bg.x, bg.y = ui.CX, ui.CY
+	ui.bakgrunn( grp, "ui/hjem_bg.jpg" )
 	ui.hinne( grp, 0.55 )
 
 	local p = ui.panel( grp, ui.CX, ui.CY + 8, 620, 440 )

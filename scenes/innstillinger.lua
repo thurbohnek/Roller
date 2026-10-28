@@ -11,8 +11,7 @@ local scene = composer.newScene()
 
 function scene:create( event )
 	local grp = self.view
-	local bg = display.newImageRect( grp, "ui/hjem_bg.jpg", 1200, 540 )
-	bg.x, bg.y = ui.CX, ui.CY
+	ui.bakgrunn( grp, "ui/hjem_bg.jpg" )
 	ui.hinne( grp, 0.45 )
 
 	local p = ui.panel( grp, ui.CX, ui.CY + 10, 560, 400 )

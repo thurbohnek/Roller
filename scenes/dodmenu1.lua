@@ -21,7 +21,7 @@ local TIPS = {
 function scene:create( event )
 	local grp = self.view
 	ui.hinne( grp, 0.6 )
-	local p = ui.panel( grp, ui.CX, ui.CY, 520, 340 )
+	local p = ui.panel( grp, ui.CX, ui.CY - 10, 520, 300 )
 	ui.tittel( grp, "Ouch!", ui.CX, ui.CY - 122, 50, ui.F.hjerte, ui.F.jordMork )
 
 	-- forsøk igjen etter dette (samme tall som telleren i banen)

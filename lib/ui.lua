@@ -142,6 +142,16 @@ function M.panel( forelder, x, y, b, h, valg )
 	return g
 end
 
+-- Bakgrunnsbilde fra Util/grafikk/lag_ui.py: 1200 x 720 enheter, med
+-- innholdet (960 x 540) i midten. Det dekker skjermer fra 4:3 (iPad) til
+-- 20:9 uten skalering, så ting som er tegnet inn i bildet (rommene i
+-- hjemmet, stien i banevalget) står der knappene er.
+function M.bakgrunn( forelder, fil )
+	local bg = display.newImageRect( forelder, fil, 1200, 720 )
+	bg.x, bg.y = M.CX, M.CY
+	return bg
+end
+
 -- Mørk hinne over hele skjermen som tar imot alle trykk (bak dialoger).
 function M.hinne( forelder, alfa )
 	local h = display.newRect( forelder, M.CX, M.CY, M.FULL_B + 40, M.FULL_H + 40 )

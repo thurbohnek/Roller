@@ -133,8 +133,7 @@ end
 function scene:create( event )
 	local grp = self.view
 
-	local bg = display.newImageRect( grp, "ui/hjem_bg.jpg", 1200, 540 )
-	bg.x, bg.y = ui.CX, ui.CY
+	ui.bakgrunn( grp, "ui/hjem_bg.jpg" )
 
 	-- tittel på himmelen
 	ui.tittel( grp, "Roller", ui.CX, 62, 64, ui.F.krem, ui.F.jord )

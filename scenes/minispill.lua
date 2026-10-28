@@ -20,8 +20,7 @@ end
 
 function scene:create( event )
 	local grp = self.view
-	local bg = display.newImageRect( grp, "ui/hjem_bg.jpg", 1200, 540 )
-	bg.x, bg.y = ui.CX, ui.CY
+	ui.bakgrunn( grp, "ui/hjem_bg.jpg" )
 	ui.hinne( grp, 0.4 )
 
 	ui.rundKnapp( grp, "tilbake", ui.VENSTRE + 40, 36, 56, function() nav.gaaTil( "scenes.gotomenu" ) end )

@@ -337,15 +337,16 @@ def main():
 
 # ------------------------------------------------------------- bakgrunner
 #
-# Bakgrunnene er 2400 x 1080, altså 1200 x 540 skjermenheter i 2x. Innholdet
-# er 960 x 540; de 120 enhetene på hver side dekker brede telefoner.
+# Bakgrunnene er 2400 x 1440, altså 1200 x 720 skjermenheter i 2x. Innholdet
+# er 960 x 540; 120 enheter på hver side dekker brede telefoner (opptil
+# 20:9), og 90 over og under dekker høye skjermer som iPad (4:3).
 # k(x, y) gjør om fra skjermenheter (som i Lua) til bildepiksler.
 
-BW, BH = 2400, 1080
+BW, BH = 2400, 1440
 
 
 def k(x, y):
-    return (x + 120) * 2, y * 2
+    return (x + 120) * 2, (y + 90) * 2
 
 
 def gradient_bilde(w, h, topp, bunn):
@@ -365,9 +366,9 @@ def overflate(im, gress_y, fro=1):
     himmel = gradient_bilde(BW, int(gress_y) + 60, hexf("7CC8FF"), hexf("D6EEFF"))
     im.alpha_composite(himmel, (0, 0))
     glod = Image.new("RGBA", im.size, (0, 0, 0, 0))
-    ImageDraw.Draw(glod).ellipse((1880, -120, 2220, 220), fill=(255, 250, 210, 170))
+    ImageDraw.Draw(glod).ellipse((1880, 60, 2220, 400), fill=(255, 250, 210, 170))
     im.alpha_composite(glod.filter(ImageFilter.GaussianBlur(50)))
-    ImageDraw.Draw(im).ellipse((1975, -30, 2125, 120), fill=(255, 249, 220, 255))
+    ImageDraw.Draw(im).ellipse((1975, 150, 2125, 300), fill=(255, 249, 220, 255))
     x = np.arange(BW)
     for b, c, f in ((gress_y - 70, hexf("A8DCC0"), fro), (gress_y - 35, hexf("86C9A0"), fro + 1)):
         y = bolge(x, b, [(700, 22), (230, 8)], f)

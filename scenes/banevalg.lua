@@ -81,8 +81,7 @@ end
 
 function scene:create( event )
 	local grp = self.view
-	local bg = display.newImageRect( grp, "ui/banevalg_bg.jpg", 1200, 540 )
-	bg.x, bg.y = ui.CX, ui.CY
+	ui.bakgrunn( grp, "ui/banevalg_bg.jpg" )
 
 	-- en liten mark ved neste bane som venter
 	local neste = 1
