@@ -32,7 +32,7 @@ local sjekkpunkt = require( "lib.sjekkpunkt" )
 local M = {}
 
 local R_DRAAPE = 50      -- fangavstand fra sentrum av et ledd, i enheter
-local R_UNGE = 400   -- MIDLERTIDIG TEST (skal være 56)
+local R_UNGE = 56
 local NAER = 700         -- bare ting nærmere enn dette sjekkes nøye
 
 local siste = { bane = nil, draaper = 0, unger = { false, false, false } }
