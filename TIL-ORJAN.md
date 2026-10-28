@@ -3943,3 +3943,18 @@ Fase 1 er ferdig:
 
 Banegrafikken, marken og samleobjektene kommer i fase 2, og butikken og
 oppdragene i fase 3.
+
+## 2026-10-28, ny grafikk fase 2 og 3
+
+- Alle ni banene er malt på nytt. Formen på bakken og isen er hentet fra
+  kollisjonen, så banene spilles helt likt som før; bare utseendet er nytt.
+  Pynt som ikke hadde kollisjon (for eksempel himmelblokka øverst i bane
+  1) er borte, så man ikke lurer seg selv.
+- Nye bakgrunner: himmel og åser i bane 1-2, grotter som blir mørkere
+  nedover i bane 3-9.
+- Ny mark (samme størrelse og fysikk), i åtte farger og med seks hatter.
+- Dråper og tre markeunger i hver bane, plassert langs veien til målet.
+- Butikken er åpen: evner som hjelper med samlingen (ingen endring i
+  fysikken), drakter og hatter. Ukentlige oppdrag gir dråper.
+- Verktøyene ligger i `Util/grafikk/` og er beskrevet i `KODEBASE.md`.
+

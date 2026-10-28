@@ -1053,10 +1053,60 @@ nådd, fordi `levelInfo.locked` bare ble laget av det gamle banevalget.
 knappebildene (`pausemenu*.png`, `knapp_*.png`, `*knapp.png` unntatt
 `pauseknapp.png`).
 
-**Neste faser:**
-2. Ny banegrafikk for bane 1-9 og Worm athletics (bane 1-2 på enga, 3-9
-   under jorda), ny mark, og dråper og markeunger plassert i banene.
-3. Butikken (markens evner og utseende for dråper) og ukentlige oppdrag.
+## Ny grafisk stil, fase 2 og 3 (2026-10-28)
+
+**Banegrafikken** lages av verktøy i `Util/grafikk/` (kjøres med en
+Python som har PIL, numpy, scipy og lupa, her `python3.13`):
+
+- `lag_baner.py [N ...] [--ny-maske]` maler `levelN/1-4.png` på nytt.
+  Formen hentes fra `Util/grafikk/masker/levelN_K.png` (0 luft, 1 bakke,
+  2 is), som ble laget fra de gamle flisbildene og kollisjonsformene i
+  `lib/shapedefs*.lua`: bakke er det som både var tegnet og ligger
+  innenfor 12 px av kollisjonen, pluss selve kollisjonen; is er der
+  kollisjonen har friksjon under 1 (is = 0,05). Pynt uten kollisjon er
+  tatt bort, så det man ser er det man kolliderer med. Bane 1-2: gress og
+  lys jord. Bane 3-9: lyskant på toppen og jord som blir kaldere og
+  mørkere nedover. Lages bane 5-9 på nytt med `hule.py`, kjør
+  `lag_baner.py N --ny-maske` etterpå. Bane 1 sine fliser var lagret i
+  dobbel størrelse og er nå 3840x2351 som de andre (visningen er lik).
+- `lag_bakgrunn.py` lager `background/baneN_1/2/3.png` (stripene i lag
+  3-5, samme bånd for grotta som før) og `baneN_bunn.jpg` (lag 6).
+  Banefilene peker på disse; de gamle `back_cave*`/`dirt1` er slettet.
+- `lag_mark.py` lager marken (`hale.png`, `del1.png`, `hode.png` i roten
+  er standarddrakten) og alle drakter i `mark/<drakt>/` og hatter i
+  `mark/hatt_<navn>.png`. Samme visningsstørrelse som før; fysikken er
+  ikke rørt.
+- `lag_samling.py` lager `lib/samleN.lua`: en "kule" følger toppen av
+  bakken fra startpunktet til målet (hopper over kløfter og fall), og
+  dråpene legges langs veien med 330 enheters mellomrom, ungene litt
+  høyere ved 30, 62 og 90 % av veien. Posisjonene er regnet fra sentrum
+  av flis 1, så de følger teststart. `--vis` lager et kontrollbilde.
+- `lib/morke.lua`: ingen mørke i bane 1-2, svakere i resten.
+
+**Samling i banen:** `lib/samling.lua`, kalt fra banefilene rett etter
+`morke`. Ingen fysikk: hvert bilde måles avstanden fra leddene i marken
+til tingene i nærheten. Dråper lagres fortløpende (til disk høyst én gang
+i sekundet), unger med en gang. HUD-raden under banenavnet viser dråper
+fra runden og de tre ungeplassene. `scenes/fullfort.lua` viser dråpene
+fra runden og gir 25 dråper første gang en bane klares
+(`framgang.taBonus`).
+
+**Butikken:** `lib/oppgradering.lua` (data, priser, valg) og
+`scenes/butikk.lua`. Evnene endrer ikke fysikken: magnet (dråper fanges
+1,6/2,2 ganger lenger unna), flaks (1/6 eller 1/3 av dråpene teller
+dobbelt) og radar (pil ved marken mot nærmeste unge som mangler). Drakt
+og hatt brukes i banene (`oppgradering.drakt( "hale.png" )`,
+`oppgradering.settPaaHatt( camera, del9 )`) og i Worm athletics
+(`lib/markfysikk.lua`).
+
+**Oppdrag:** `lib/oppdrag.lua` trekker tre oppdrag per uke (mandag, likt
+for alle), og spillet melder hendelser (`draape`, `unge`, `bane`,
+`sport`, `gave`). `scenes/oppdrag.lua` viser dem og deler ut dråpene.
+Hjemmet viser et rødt merke når et oppdrag er klart.
+
+**Gjenstår:** Worm athletics har fortsatt de gamle bakkefargene (marken
+er ny). De gamle scenene og knappebildene som er nevnt over er ikke
+slettet ennå.
 
 ## Mørket i hulen (2026-09-28)
 
