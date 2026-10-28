@@ -60,19 +60,19 @@ function scene:create( event )
 	local linje = "+" .. fikk .. " drops"
 	if bonus > 0 then linje = linje .. "   +" .. bonus .. " first-time bonus" end
 	ui.tekst( grp, linje, ui.CX, ui.CY + 50, 19, { farge = ui.F.draape } )
-	ui.pille( grp, "draape", ui.CX, ui.CY + 84, 160, tostring( framgang.draaper() ) )
+	ui.pille( grp, "draape", ui.CX, ui.CY + 78, 160, tostring( framgang.draaper() ) )
 
 	local siste = not lm.anotherLevel()
-	ui.knapp( grp, { tekst = siste and "All levels" or "Next level", ikon = "spill", x = ui.CX, y = ui.CY + 142,
+	ui.knapp( grp, { tekst = siste and "All levels" or "Next level", ikon = "spill", x = ui.CX, y = ui.CY + 150,
 		bredde = 260, hoyde = 64, trykk = function()
 			rydd()
 			if siste then nav.gaaTil( "scenes.gotochooselevel" ) else nav.gaaTil( "scenes.gotonextlevel" ) end
 		end } )
-	ui.rundKnapp( grp, "liste", ui.CX - 200, ui.CY + 142, 60, function()
+	ui.rundKnapp( grp, "liste", ui.CX - 200, ui.CY + 150, 60, function()
 		rydd()
 		nav.gaaTil( "scenes.gotochooselevel" )
 	end )
-	ui.rundKnapp( grp, "hjem", ui.CX + 200, ui.CY + 142, 60, function()
+	ui.rundKnapp( grp, "hjem", ui.CX + 200, ui.CY + 150, 60, function()
 		rydd()
 		nav.gaaTil( "scenes.gotomenu" )
 	end )
