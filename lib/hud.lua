@@ -10,7 +10,8 @@
 -- Brukes fra banefilene og lib/liv.lua:
 --     hud.gruppe()          -- lager/finner gruppa for gjeldende bane
 --     hud.pauseKnapp( k )   -- flytter pauseknappen (knapp1) inn hit
---     hud.bane( n )         -- banepillen, og legger HUD-en øverst
+--     hud.bane( n )         -- banepillen, og legger HUD-en øverst (og viser
+--                           -- "How to move" første gang bane 1 startes)
 
 local ui = require( "lib.ui" )
 
@@ -86,6 +87,17 @@ function M.bane( n )
 	ui.tekst( intro, NAVN[n] or "", ui.CX, ui.CY - 18, 26, { skygge = true } )
 	transition.to( intro, { delay = 1300, time = 500, alpha = 0, y = -30,
 		onComplete = function() display.remove( intro ) end } )
+
+	-- Første gang bane 1 startes: vis "How to move" med fysikken på pause.
+	local framgang = require( "lib.framgang" )
+	if n == 1 and not framgang.harSettKontroller() then
+		local physics = require( "physics" )
+		physics.pause()
+		require( "lib.kontroller" ).vis( h, function()
+			framgang.settKontroller()
+			physics.start()
+		end )
+	end
 end
 
 return M

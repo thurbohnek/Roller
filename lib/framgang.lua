@@ -102,6 +102,17 @@ function M.taBonus( bane )
 	return true
 end
 
+-- Om spilleren har sett "How to move" (vises av seg selv første gang
+-- bane 1 startes, se lib/hud.lua).
+function M.harSettKontroller()
+	return data.settKontroller == true
+end
+
+function M.settKontroller()
+	data.settKontroller = true
+	lagre()
+end
+
 -- ---------------------------------------------------------- daglig gave
 
 local GAVER = { 20, 30, 40, 60, 80, 100, 150 }   -- dag 1..7, så 150 hver dag
