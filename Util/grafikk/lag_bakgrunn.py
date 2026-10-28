@@ -146,13 +146,13 @@ def eng_stripe(n, lag, rng):
     fast = yy > topp[None, :]
     from scipy import ndimage as nd
     ned = (yy - topp[None, :]).clip(0)
-    gress = [hexf("6CCB5F"), hexf("8FCF8A"), hexf("A9D3B4")][lag - 1]
-    gress_m = [hexf("3E9A47"), hexf("6BAE78"), hexf("8DBDA4")][lag - 1]
-    jord = [hexf("9E7A5C"), hexf("AFA39A"), hexf("BFC6CC")][lag - 1]   # blekere jo lenger unna
-    t = np.clip(ned / 40, 0, 1)            # gresset er en tynn kant
-    rgb = gress[None, None] * (1 - t[..., None]) + gress_m[None, None] * t[..., None]
-    t2 = np.clip((ned - 45) / 140, 0, 1)    # så jord
-    rgb = rgb * (1 - t2[..., None]) + jord[None, None] * t2[..., None]
+    # Fjerne åser: grønne som går mot blått jo lenger unna, uten brun jord,
+    # så de ikke kan forveksles med bakken marken ruller på.
+    topp_f = [hexf("8CC98A"), hexf("A6D2AE"), hexf("BFDCD2")][lag - 1]
+    bunn_f = [hexf("6FA88A"), hexf("8DBBAA"), hexf("A9C9CC")][lag - 1]
+    t = np.clip(ned / 500, 0, 1)
+    rgb = topp_f[None, None] * (1 - t[..., None]) + bunn_f[None, None] * t[..., None]
+    gress = topp_f
     rgb *= (1 + 0.02 * stoy(rng, 80))[..., None]
     lysrand = (ned > 0) & (ned < 8)
     rgb[lysrand] = mix(gress, hexf("FFFFFF"), 0.35)
@@ -164,11 +164,11 @@ def eng_stripe(n, lag, rng):
     if lag == 3:
         # skyer høyt oppe
         sky = Image.new("RGBA", (W * 3, H), (0, 0, 0, 0))
-        for _ in range(3):
-            # hver sky i sitt eget lag, så den flate undersiden ikke kutter naboskyer
+        for k in range(3):
+            # hver sky i sitt eget lag, spredt jevnt bortover så de ikke overlapper
             en = Image.new("RGBA", (W * 3, H), (0, 0, 0, 0))
             d = ImageDraw.Draw(en)
-            cx = rng.uniform(0, W) + W
+            cx = W * (k + 0.5) / 3 + rng.uniform(-60, 60) + W
             cy = rng.uniform(0.12, b0 - 0.05) * H
             for j in range(9):
                 dx = (j - 4) * 32 + rng.uniform(-10, 10)
