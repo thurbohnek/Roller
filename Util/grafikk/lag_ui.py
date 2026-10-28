@@ -634,18 +634,27 @@ def arena_bg():
     im.alpha_composite(lys)
     d = ImageDraw.Draw(im)
 
-    # tribuner: tre trinn med publikum
+    # tribuner med publikum: små og dempet, så spillerens mark skiller seg ut
     farger = [("F49AA8", "C95574"), ("FFC53D", "C9901E"), ("78CDFA", "2E7FB8"), ("6FD488", "3A9E58"),
               ("A97BF0", "7449C0"), ("FF9A3D", "C9661E")]
-    for trinn, (y0, st) in enumerate(((560, 34), (650, 40), (750, 46))):
-        d.rectangle((0, y0 + st * 0.9, W, y0 + st * 0.9 + 70), fill=hexf(["5A3418", "4E2C12", "42240E"][trinn]))
-        d.rectangle((0, y0 + st * 0.9, W, y0 + st * 0.9 + 8), fill=hexf("8A5A34"))
+    trib = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    td = ImageDraw.Draw(trib)
+    rader = ((520, 18), (575, 20), (635, 22), (700, 24), (770, 26))
+    for trinn, (y0, st) in enumerate(rader):
+        d.rectangle((0, y0 + st * 0.9, W, y0 + st * 0.9 + 60), fill=hexf(["5E3618", "573216", "502C12", "4A2810", "42240E"][trinn]))
+        d.rectangle((0, y0 + st * 0.9, W, y0 + st * 0.9 + 6), fill=hexf("8A5A34"))
         x = rng.uniform(0, 30)
-        while x < W - st:
+        while x < W - st * 2:
             f, m = farger[rng.integers(0, len(farger))]
-            mark_ring(d, x + st, y0 + st * 0.2 + rng.uniform(-4, 4), st * 0.55, st * 0.42,
-                      hexf(f), hexf(m), (255, 255, 255, 120), ansikt=True, apen=rng.uniform(40, 80))
-            x += st * 2.1 + rng.uniform(0, st * 0.6)
+            mark_ring(td, x + st, y0 + st * 0.2 + rng.uniform(-3, 3), st * 0.55, st * 0.42,
+                      hexf(f), hexf(m), (255, 255, 255, 90), ansikt=True, apen=rng.uniform(40, 80))
+            x += st * 2.3 + rng.uniform(0, st * 0.8)
+    # demp: blekere og mørkere, som om de sitter i halvmørket
+    a = np.asarray(trib).astype(float)
+    gra = a[..., :3].mean(axis=2, keepdims=True)
+    a[..., :3] = (a[..., :3] * 0.45 + gra * 0.55) * 0.62
+    im.alpha_composite(Image.fromarray(a.astype(np.uint8), "RGBA"))
+    d = ImageDraw.Draw(im)
     # tak med drypp
     tak = 120 + per(6, 40, 3)
     pts = [(0, 0)] + [(x, tak[x]) for x in range(0, W, 8)] + [(W, tak[0]), (W, 0)]
