@@ -689,12 +689,18 @@ function k.updateLock(lock, lvl)
 	--print("levelNum", levelNum)
 	if levelNum > 0 and levelNum <= k.totalLevels then
 		local levelInfo = GGData:new( k.dataFile )
+		-- Rettet 2026-10-28: locked ble bare laget av det gamle banevalget
+		-- (loadData), så en ny spiller fikk krasj her ved første mål.
+		levelInfo.locked = levelInfo.locked or {}
 		levelInfo.locked[levelNum] = lock
 		levelInfo:save()
 	end
 end
 -- just a shortcut that can be used to call the previous function.
 function k.unlockNextLevel()
+	-- Lagt til 2026-10-28: banene kaller denne når målet nås, så her
+	-- registreres også at banen er fullført (lib/framgang.lua).
+	require( "lib.framgang" ).fullfor( k.currentLevel )
 	k.updateLock()
 end
 

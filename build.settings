@@ -13,7 +13,9 @@ settings = {
 	-- som "assets". Stjernen etter mappenavnet er det som ekskluderer hele
 	-- mappen (uten den ville den bare blitt inkludert som en tom mappe).
 	excludeFiles = {
-		all = { "opprinnelig-fra-dropbox*" },
+		-- Util/ er verktøy (Python, tegninger), *.md er dokumentasjon. Ingen
+		-- av delene brukes av spillet.
+		all = { "opprinnelig-fra-dropbox*", "Util*", "*.md", "*.py" },
 	},
 
 	orientation = {

@@ -68,23 +68,8 @@ grp=sceneGroup
 
 
 
-    local sheetData =  { width = 1200 , height= 540, count = 6 , numFrames = 6, sheetContentWidth = 3600, sheetContentHeight = 1080 }
-    local spriteSheet = graphics.newImageSheet("last.png" , sheetData)
-
-    local sequenceData = {
-    {name = "lastlast", start = 1,  count=6, time=500, loopCount = 0 }
-    }
-
- local   last = display.newSprite (spriteSheet, sequenceData)
-
-last.height = screenHeight
-last.width  = screenWidth
-last.x = bredde*0.5
-last.y = hoyde*0.5
-
-    last:setSequence("lastlast")
-    grp:insert(last)
-    last:play()
+    -- Lasteskjerm i ny stil (2026-10-28, lib/lasting.lua).
+    require( "lib.lasting" ).vis( sceneGroup )
 
 
 

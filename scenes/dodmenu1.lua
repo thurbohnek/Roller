@@ -1,286 +1,52 @@
+-- Dødsmenyen (ny stil 2026-10-28). Vises som overlay når marken knekker
+-- eller faller ut av banen. Retry, Levels og Home koster ett forsøk, som
+-- før (lib/navigasjon.lua forlatBane, som også sender til
+-- reklame-for-liv når forsøkene er brukt opp).
+
 local composer = require( "composer" )
+local ui = require( "lib.ui" )
+local nav = require( "lib.navigasjon" )
+local liv = require( "lib.liv" )
 
 local scene = composer.newScene()
 
-local widget = require ("widget")
+local TIPS = {
+	"Hold the screen to stretch the worm across gaps.",
+	"Let go to curl up and roll faster downhill.",
+	"Double tap to go limp and slide through narrow icy cracks.",
+	"Tap once to make a limp worm firm again.",
+	"Stretch out just before an edge to jump further.",
+}
 
-widget.setTheme ( "widget_theme_ios")
-local physicsData = (require "lib.shapedefs").physicsData(scaleFactor)
-local physics = require( "physics" )
---physics.setDrawMode( "hybrid" )
-local perspective = require ("lib.perspective")
-local scaleFactor = 1.0
-local bredde = display.contentWidth
-local hoyde = display.contentHeight
-local centerX = display.contentCenterX
-local centerY = display.contentCenterY
-local screenLeft = display.screenOriginX
-local screenWidth = display.viewableContentWidth - screenLeft * 2
-local screenRight = screenLeft + screenWidth
-local screenTop = display.screenOriginY
-local screenHeight = display.viewableContentHeight - screenTop * 2
-local screenBottom = screenTop + screenHeight
-local gameUI =require("lib.gameUI")
-local lm = require("lib.ogt_levelmanager")
-local pausemenu = require("scenes.level1")
-local liv =require("lib.liv")
-
--- -----------------------------------------------------------------------------------------------------------------
--- All code outside of the listener functions will only be executed ONCE unless "composer.removeScene()" is called.
--- -----------------------------------------------------------------------------------------------------------------
-
--- local forward references should go here
-
--- -------------------------------------------------------------------------------
-
-
-local function goSomewhere (event)
-local goto = event.target.id
-local options = {effect = "slideRight" , time = 500}
-composer.gotoScene( goto, options )
-end
-
-
-
--- "scene:create()"
 function scene:create( event )
-local sceneGroup = self.view
-print ("dodmenu scene:create did")
-grp=sceneGroup
+	local grp = self.view
+	ui.hinne( grp, 0.6 )
+	local p = ui.panel( grp, ui.CX, ui.CY, 520, 340 )
+	ui.tittel( grp, "Ouch!", ui.CX, ui.CY - 122, 50, ui.F.hjerte, ui.F.jordMork )
 
+	-- forsøk igjen etter dette (samme tall som telleren i banen)
+	local igjen = math.max( 0, liv.returnScore() - 1 )
+	ui.pille( grp, "hjerte", ui.CX, ui.CY - 62, 190, igjen .. ( igjen == 1 and " try left" or " tries left" ) )
+	ui.tekst( grp, TIPS[math.random( #TIPS )], ui.CX, ui.CY - 10, 19,
+		{ farge = ui.F.kremDempet, fet = false, bredde = 440 } )
 
-  local pausemenu = display.newImageRect( "dodmenu.png",310,300)
-  pausemenu.x = bredde/2
-  pausemenu.y = hoyde/2
-  pausemenu.alpha=1
-  grp:insert(pausemenu)
-
-  local pausemenumainmenu = display.newImageRect( "pausemenumainmenu.png",109,45)
-  pausemenumainmenu.x = pausemenu.x
-  pausemenumainmenu.y = pausemenu.y+60
-  pausemenumainmenu.alpha=1
-  grp:insert(pausemenumainmenu)
-
-  local pausemenuretry = display.newImageRect( "pausemenuretry.png",109,45)
-  pausemenuretry.x = pausemenu.x
-  pausemenuretry.y = pausemenu.y-60
-  pausemenuretry.alpha=1
-  grp:insert(pausemenuretry)
-
-
-
-  local pausemenulevels = display.newImageRect( "pausemenulevels.png",109,45)
-  pausemenulevels.x = pausemenu.x
-  pausemenulevels.y = pausemenu.y
-  pausemenulevels.alpha=1
-  grp:insert(pausemenulevels)
-
-
-  
-
-
-
-
-
-
-
-
-local function resume(event)
-
--- Ryddet bort 2026-09-10: trykk_knapp/knekk/onCollision/onCollision1 er
--- lokale variabler i banefilen (level1.lua osv), usynlige herfra. Disse
--- removeEventListener-kallene har dermed aldri fjernet noe i praksis
--- (refererte en udefinert global). Selve opprydningen skjer riktig i
--- banens egen scene:hide når composer.removeScene() under tvinger den
--- gjennom.
-
--- Avbryt ventende transitions HER, med en gang retry trykkes, i stedet
--- for å stole på at banen sin egen scene:hide rekker det i tide
--- (rettet 2026-09-10, transition.cancel() i scene:hide sin "did"-fase
--- var IKKE tidsnok: den fasen skjer først når hele overgangs-fadeen
--- til gotoretry er ferdig (500ms), og en ventende støveffekt fra
--- level1.lua kan fyre av sitt onComplete midt i den fadeen, altså FØR
--- did-fasen rekker å avbryte den. transition.cancel() uten argumenter
--- er globalt og trenger ikke tilgang til banens egne lokale variabler.
-transition.cancel()
-
-liv.endreliv(1)
-liv.lagreliv()
--- Går via en liten mellomscene i stedet for å rive ned/laste banen
--- direkte herfra (rettet 2026-09-10, krasjet fortsatt etter forrige
--- forsøk med hideOverlay()+removeScene() rett i denne funksjonen: å
--- rive ned banen som fortsatt er den aktive scenen mens denne
--- dødsmenyen ligger som overlay oppå den er ikke en støttet rekkefølge
--- i Composer, uansett rekkefølge på hideOverlay/removeScene/gotoScene).
--- "scenes.gotoretry" gjør en helt vanlig gotoScene (som Composer selv
--- skjuler denne overlayen trygt for), og river først ned/laster banen
--- på nytt når den mellomscenen faktisk er den aktive, uten overlay
--- oppå seg. Samme mønster som "scenes.gotolevel1" under, som allerede
--- gjorde dette trygt for "ingen liv igjen"-tilfellet.
-local target = "scenes.gotoretry"
-if liv.erTom() then
-	-- Ingen liv igjen. Rettet 2026-09-15: gikk før rett til
-	-- "scenes.gotolevel1", nå viser vi først reklame-for-liv-skjermen
-	-- (scenes/adoffer.lua). Den som ikke vil se reklame kan fortsatt
-	-- velge "start på nytt fra bane 1" derfra.
-	target = "scenes.adoffer"
-end
-local ok, err = pcall( composer.gotoScene, target, {effect = "fade" , time = 500} )
-if not ok then
-	local msg = "Checkpoint: " .. tostring(_G.LAST_CHECKPOINT) .. "\n" .. tostring(err)
-	print( "CRASH going to " .. tostring(target) .. " (retry): " .. msg )
-	local bg = display.newRect( display.contentCenterX, display.contentCenterY, display.contentWidth - 20, display.contentHeight - 20 )
-	bg:setFillColor( 0, 0, 0, 0.85 )
-	local t = display.newText( { text = msg, x = display.contentCenterX, y = display.contentCenterY, width = display.contentWidth - 40, font = native.systemFont, fontSize = 14, align = "left" } )
-	t:setFillColor( 1, 0.3, 0.3 )
-end
-pausemenu.alpha=0
--- Rettet 2026-09-15: physics.start() her satte fysikken til banen vi
--- forlater i gang igjen midt i fade-overgangen til gotoretry/adoffer,
--- så marken falt videre synlig i et sekund eller to selv om retry
--- allerede var trykket ("Marken går videre i ett sekund eller to etter
--- man har klikket retry"). Banen vi går TIL starter selv fysikken sin
--- egen physics.start() i sin scene:create, så denne trengs ikke her.
--- Denne menyen har ingen "fortsett spillet"-knapp (bare retry/hovedmeny/
--- baner), så ingen av knappene her skal noensinne starte fysikken igjen.
-end
-pausemenuretry:addEventListener ("touch", resume)
-
-
-local function resume1(event)
-pausemenu.alpha=0
-timer.cancel(eventTimer)
--- Ryddet bort 2026-09-10: trykk_knapp/knekk/onCollision/onCollision1 er
--- lokale variabler i banefilen (level1.lua osv), usynlige herfra. Disse
--- removeEventListener-kallene har dermed aldri fjernet noe i praksis
--- (refererte en udefinert global). Selve opprydningen skjer riktig i
--- banens egen scene:hide når composer.removeScene() under tvinger den
--- gjennom.
-print("Current Score1: ", liv.returnScore())
-print("Current Score2: ", liv.returnScore())
-liv.endreliv( 1 )
-print("Current Score3: ", liv.returnScore())
-print("Current Score4: ", liv.returnScore())
-print("Current Score5: ", liv.returnScore())
-liv.lagreliv()
--- Rettet 2026-09-15: denne knappen gikk før alltid til "scenes.gotomenu"
--- uansett liv igjen, liv-sjekken fantes bare i retry-knappen resume()
--- over. Uten den havnet man med 0 liv i hovedmenyen uten at
--- reklame-for-liv-skjermen (scenes/adoffer.lua) noen gang ble vist.
-local target = "scenes.gotomenu"
-if liv.erTom() then
-	target = "scenes.adoffer"
-end
-local ok, err = pcall( composer.gotoScene, target, {effect = "fade" , time = 1} )
-if not ok then
-	local msg = "Checkpoint: " .. tostring(_G.LAST_CHECKPOINT) .. "\n" .. tostring(err)
-	print( "CRASH going to " .. tostring(target) .. " (main menu): " .. msg )
-	local bg = display.newRect( display.contentCenterX, display.contentCenterY, display.contentWidth - 20, display.contentHeight - 20 )
-	bg:setFillColor( 0, 0, 0, 0.85 )
-	local t = display.newText( { text = msg, x = display.contentCenterX, y = display.contentCenterY, width = display.contentWidth - 40, font = native.systemFont, fontSize = 14, align = "left" } )
-	t:setFillColor( 1, 0.3, 0.3 )
-end
--- Rettet 2026-09-15: samme feil som i resume() over, se forklaring der.
-end
-pausemenumainmenu:addEventListener ("touch", resume1)
-
-
-
-
-local function resume3(event)
-pausemenu.alpha=0
-timer.cancel(eventTimer)
--- Ryddet bort 2026-09-10: trykk_knapp/knekk/onCollision/onCollision1 er
--- lokale variabler i banefilen (level1.lua osv), usynlige herfra. Disse
--- removeEventListener-kallene har dermed aldri fjernet noe i praksis
--- (refererte en udefinert global). Selve opprydningen skjer riktig i
--- banens egen scene:hide når composer.removeScene() under tvinger den
--- gjennom.
-print("Current Score1: ", liv.returnScore())
-print("Current Score2: ", liv.returnScore())
-liv.endreliv( 1 )
-print("Current Score3: ", liv.returnScore())
-print("Current Score4: ", liv.returnScore())
-print("Current Score5: ", liv.returnScore())
-liv.lagreliv()
--- Rettet 2026-09-15: samme feil som i resume1 over, denne knappen gikk
--- alltid til "scenes.gotochooselevel" uansett liv igjen.
-local target = "scenes.gotochooselevel"
-if liv.erTom() then
-	target = "scenes.adoffer"
-end
-local ok, err = pcall( composer.gotoScene, target, {effect = "fade" , time = 1} )
-if not ok then
-	local msg = "Checkpoint: " .. tostring(_G.LAST_CHECKPOINT) .. "\n" .. tostring(err)
-	print( "CRASH going to " .. tostring(target) .. " (levels): " .. msg )
-	local bg = display.newRect( display.contentCenterX, display.contentCenterY, display.contentWidth - 20, display.contentHeight - 20 )
-	bg:setFillColor( 0, 0, 0, 0.85 )
-	local t = display.newText( { text = msg, x = display.contentCenterX, y = display.contentCenterY, width = display.contentWidth - 40, font = native.systemFont, fontSize = 14, align = "left" } )
-	t:setFillColor( 1, 0.3, 0.3 )
-end
--- Rettet 2026-09-15: samme feil som i resume() over, se forklaring der.
-end
-pausemenulevels:addEventListener ("touch", resume3)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	ui.knapp( grp, { tekst = "Try again", ikon = "igjen", x = ui.CX, y = ui.CY + 66, bredde = 280, hoyde = 70,
+		trykk = function() nav.forlatBane( "scenes.gotoretry" ) end } )
+	ui.rundKnapp( grp, "liste", ui.CX - 205, ui.CY + 66, 60, function()
+		nav.forlatBane( "scenes.gotochooselevel" )
+	end, "oransje" )
+	ui.rundKnapp( grp, "hjem", ui.CX + 205, ui.CY + 66, 60, function()
+		nav.forlatBane( "scenes.gotomenu" )
+	end, "oransje" )
 end
 
-
-
-
--- "scene:show()"
-function scene:show( event )
-local sceneGroup = self.view
-local phase = event.phase
-if ( phase == "will" ) then
-print ("dodmenu scene:show will")
-elseif ( phase == "did" ) then
-print ("dodmenu scene:show did")
-end
-end
-
-
--- "scene:hide()"
 function scene:hide( event )
-local sceneGroup = self.view
-local phase = event.phase
-if ( phase == "will" ) then
-print ("dodmenu scene:hide will")
-elseif ( phase == "did" ) then
-print ("dodmenu scene:hide did")
-composer.removeScene("dodmenu")
-end
+	if event.phase == "did" then
+		composer.removeScene( "scenes.dodmenu1" )
+	end
 end
 
-
--- "scene:destroy()"
-function scene:destroy( event )
-local sceneGroup = self.view
-print ("dodmenu scene:destroy did")
-end
-
-
--- -------------------------------------------------------------------------------
-
--- Listener setup
 scene:addEventListener( "create", scene )
-scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
-scene:addEventListener( "destroy", scene )
-
--- -------------------------------------------------------------------------------
 
 return scene

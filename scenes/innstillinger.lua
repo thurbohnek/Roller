@@ -1,66 +1,45 @@
--- "Settings"-steinen på startskjermen fører hit (lagt til 2026-09-27).
--- Foreløpig bare lyd av/på, se lib/innstillinger.lua. Panelet og
--- knappene er de samme bildene som pausemenyen bruker.
+-- Innstillinger (lagt til 2026-09-27, ny stil 2026-10-28). Nås fra
+-- tannhjulet i hjemmet. Lyd av/på (lib/innstillinger.lua), styringen og
+-- lisensen til skrifta.
 
 local composer = require( "composer" )
+local ui = require( "lib.ui" )
+local nav = require( "lib.navigasjon" )
 local innstillinger = require( "lib.innstillinger" )
 
 local scene = composer.newScene()
 
-local bredde = display.contentWidth
-local hoyde = display.contentHeight
-
-local function tilMenyen()
-	local ok, err = pcall( composer.gotoScene, "scenes.gotomenu", { effect = "fade", time = 500 } )
-	if not ok then
-		print( "CRASH going to gotomenu (innstillinger): " .. tostring( err ) )
-	end
-	return true
-end
-
 function scene:create( event )
 	local grp = self.view
+	local bg = display.newImageRect( grp, "ui/hjem_bg.jpg", 1200, 540 )
+	bg.x, bg.y = ui.CX, ui.CY
+	ui.hinne( grp, 0.45 )
 
-	local bakgrunn = display.newRect( grp, bredde / 2, hoyde / 2, bredde * 2, hoyde * 2 )
-	bakgrunn:setFillColor( 0.44, 0.25, 0.14 )
+	local p = ui.panel( grp, ui.CX, ui.CY + 10, 560, 400 )
+	ui.tittel( grp, "Settings", ui.CX, ui.CY - 150, 42 )
 
-	local panel = display.newImageRect( grp, "pausemenu.png", 600, 300 )
-	panel.x = bredde / 2
-	panel.y = hoyde / 2
-
-	local tittel = display.newText( { parent = grp, text = "Settings", x = bredde / 2, y = panel.y - 190,
-		font = native.systemFontBold, fontSize = 40 } )
-	tittel:setFillColor( 0.95, 0.85, 0.7 )
-
-	local lydknapp = display.newImageRect( grp, "pausemenusound.png", 109, 45 )
-	lydknapp.x = panel.x - 90
-	lydknapp.y = panel.y - 10
-
-	local lydtekst = display.newText( { parent = grp, text = "", x = lydknapp.x, y = lydknapp.y + 45,
-		font = native.systemFontBold, fontSize = 22 } )
-	lydtekst:setFillColor( 0.2, 0.2, 0.2 )
-
-	local function visLyd()
-		if innstillinger.lydPaa() then
-			lydtekst.text = "On"
-			lydknapp.alpha = 1
-		else
-			lydtekst.text = "Off"
-			lydknapp.alpha = 0.45
-		end
+	-- lyd
+	local lydKnapp
+	local function tegnLyd()
+		if lydKnapp then display.remove( lydKnapp ) end
+		local paa = innstillinger.lydPaa()
+		lydKnapp = ui.knapp( grp, { tekst = paa and "Sound: On" or "Sound: Off", ikon = paa and "lyd" or "lydAv",
+			x = ui.CX, y = ui.CY - 68, bredde = 300, hoyde = 62, farge = paa and "gronn" or "gra",
+			trykk = function()
+				innstillinger.byttLyd()
+				tegnLyd()
+			end } )
 	end
-	visLyd()
+	tegnLyd()
 
-	lydknapp:addEventListener( "tap", function()
-		innstillinger.byttLyd()
-		visLyd()
-		return true
-	end )
+	ui.knapp( grp, { tekst = "How to move", ikon = "hjelp", x = ui.CX, y = ui.CY + 10, bredde = 300, hoyde = 62,
+		farge = "bla", trykk = function() require( "lib.kontroller" ).vis( grp ) end } )
 
-	local menyknapp = display.newImageRect( grp, "pausemenumainmenu.png", 109, 45 )
-	menyknapp.x = panel.x + 90
-	menyknapp.y = panel.y - 10
-	menyknapp:addEventListener( "tap", tilMenyen )
+	ui.tekst( grp, "Font: Fredoka (SIL Open Font License)", ui.CX, ui.CY + 92, 14,
+		{ farge = ui.F.kremDempet, fet = false } )
+
+	ui.knapp( grp, { tekst = "Back", ikon = "tilbake", x = ui.CX, y = ui.CY + 166, bredde = 200, hoyde = 56,
+		farge = "oransje", trykk = function() nav.gaaTil( "scenes.gotomenu" ) end } )
 end
 
 function scene:hide( event )

@@ -41,7 +41,7 @@ local lm = require("lib.ogt_levelmanager")
 local function goto( event )
     --last:play()
  timer.cancel(eventTimer)
-	local ok, err = pcall( composer.gotoScene, "scenes.menu", {effect = "fade" , time = 500} )
+	local ok, err = pcall( composer.gotoScene, "scenes.hjem", {effect = "fade" , time = 500} )
 	if not ok then
 		local msg = "Checkpoint: " .. tostring(_G.LAST_CHECKPOINT) .. "\n" .. tostring(err)
 		print( "CRASH going to menu: " .. msg )
@@ -64,23 +64,8 @@ grp=sceneGroup
 
 
 
-    local sheetData =  { width = 1200 , height= 540, count = 6 , numFrames = 6, sheetContentWidth = 3600, sheetContentHeight = 1080 }
-    local spriteSheet = graphics.newImageSheet("last.png" , sheetData)
- 
-    local sequenceData = { 
-    {name = "lastlast", start = 1,  count=6, time=500, loopCount = 0 }
-    }       
-    
-    last = display.newSprite (spriteSheet, sequenceData)
-
-last.height = screenHeight
-last.width  = screenWidth 
-last.x = bredde/2
-last.y = hoyde/2
-
-    last:setSequence("lastlast")
-    grp:insert(last)
-    last:play()
+    -- Lasteskjerm i ny stil (2026-10-28, lib/lasting.lua).
+    require( "lib.lasting" ).vis( sceneGroup )
 
 
 

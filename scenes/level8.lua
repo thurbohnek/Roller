@@ -131,7 +131,7 @@ local sjekkUtenforBanen
         -- ("gotochooselevel"), går nå automatisk videre til neste bane
         -- via "gotonextlevel" (som selv faller tilbake til banevalget
         -- om dette var siste bane), se scenes/gotonextlevel.lua.
-        composer.showOverlay( "scenes.gotonextlevel",{isModal = true,effect = "fade",time = 500,})
+        composer.showOverlay( "scenes.fullfort",{isModal = true,effect = "fade",time = 500,})
         end
 
 -- -----------------------------------------------------------------------------------------------------------------
@@ -221,6 +221,8 @@ lm.currentLevel = 8 -- så retry vet hvilken bane den skal restarte
     knapp1.y = hoyde - hoyde + (knapp1.height*2)
     knapp1.alpha = 1
     grp:insert(knapp1)
+    -- Ny plass i skjermbildet under spill (2026-10-28, lib/hud.lua).
+    require( "lib.hud" ).pauseKnapp( knapp1 )
    
 
     local hent = liv.hent 

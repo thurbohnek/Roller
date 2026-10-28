@@ -1,32 +1,13 @@
--- Viser hvilken bane man spiller (lagt til 2026-09-28).
---
--- Bruker de samme grå nummersteinene som banevalget (stein1.png ...
--- stein9.png). En stor stein vises midt på skjermen når banen starter
--- og glir bort, og en liten blir liggende øverst til venstre, på samme
--- høyde som livene øverst til høyre.
---
--- Legges i scenegruppa (grp), over kameraet og mørket, som livtelleren.
--- Kalles i banefila rett etter mørket:
+-- Viser hvilken bane man spiller (lagt til 2026-09-28, ny stil
+-- 2026-10-28). Banefilene kaller denne rett etter mørket; selve
+-- tegningen ligger nå i lib/hud.lua (banepille øverst til venstre og en
+-- stor introtekst som glir bort).
 --     require( "lib.banenummer" ).vis( 7 )
 
 local M = {}
 
 function M.vis( bane )
-	local bilde = "stein" .. bane .. ".png"
-	local x = display.screenOriginX + 70
-	local y = 45
-
-	local liten = display.newImageRect( bilde, 1000, 868 )
-	liten.width, liten.height = 86, 75
-	liten.x, liten.y = x, y
-	grp:insert( liten )
-
-	local stor = display.newImageRect( bilde, 1000, 868 )
-	stor.width, stor.height = 173, 150
-	stor.x, stor.y = display.contentCenterX, display.contentCenterY - 60
-	grp:insert( stor )
-	transition.to( stor, { delay = 1200, time = 700, alpha = 0, x = x, y = y,
-		width = 86, height = 75, onComplete = function() display.remove( stor ) end } )
+	require( "lib.hud" ).bane( bane )
 end
 
 return M

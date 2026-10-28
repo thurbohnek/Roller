@@ -24,14 +24,16 @@ local function visLapp()
 		return
 	end
 	lapp = display.newGroup()
-	local x = display.screenOriginX + 175
-	local y = display.screenOriginY + display.actualContentHeight - 44
-	local stein = display.newImageRect( lapp, "pausemenu.png", 330, 74 )
-	stein.x, stein.y = x, y
-	stein.alpha = 0.92
-	local t = display.newText( { parent = lapp, text = "Update ready!\nReload the page to play it.",
-		x = x, y = y, width = 300, font = native.systemFontBold, fontSize = 17, align = "center" } )
-	t:setFillColor( 0.95, 0.85, 0.7 )
+	local ui = require( "lib.ui" )
+	local x = ui.VENSTRE + 170
+	local y = ui.BUNN - 40
+	local flate = display.newRoundedRect( lapp, x, y, 316, 58, 29 )
+	flate:setFillColor( ui.F.jord[1], ui.F.jord[2], ui.F.jord[3], 0.92 )
+	flate.strokeWidth = 3
+	flate:setStrokeColor( unpack( ui.F.gull ) )
+	ui.ikon( lapp, "gave", x - 128, y, 34 )
+	ui.tekst( lapp, "Update ready!", x + 14, y - 11, 17, { farge = ui.F.gull } )
+	ui.tekst( lapp, "Reload the page to play it.", x + 14, y + 11, 14, { farge = ui.F.krem, fet = false } )
 	-- "touch" og ikke "tap": da tar lappen hele trykket, så det ikke også
 	-- styrer marken (banene lytter på touch for hele skjermen)
 	lapp:addEventListener( "touch", function( e )

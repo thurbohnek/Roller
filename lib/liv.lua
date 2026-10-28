@@ -104,26 +104,21 @@ display.remove( livbilde )
 display.remove( livretry )
 livText, livbilde, livretry = nil, nil, nil
 
-livText = display.newText(livIgjenEtterDette(), bredde-200 ,hoyde-hoyde+45 ,nil ,30)
-grp:insert( livText )
-
-livbilde = display.newImageRect( "mark.png",121,141 )
-livbilde.x = livText.x
-livbilde.y = livText.y
-livbilde.height = 141/2
-livbilde.width = 121/2
-grp:insert(livbilde)
+-- Ny stil 2026-10-28: forsøkene vises som en pille med hjerte øverst til
+-- høyre i skjermbildet under spill (lib/hud.lua), ved pauseknappen.
+local ui = require( "lib.ui" )
+local hudGruppe = require( "lib.hud" ).gruppe()
+livbilde = ui.pille( hudGruppe, "hjerte", ui.HOYRE - 150, ui.TOPP + 40, 120, tostring( livIgjenEtterDette() ) )
+livText = livbilde
 
 -- Retry-knapp rett under livene, skjult til man trykker på dem.
 -- Lagt til 2026-09-15, Mathias: "Om man klikker på livene sine bør det
 -- være en knapp for å retry, så slipper man å pause også trykke retry".
 -- To trykk totalt (livene, så knappen) er med vilje: da kan man ikke
 -- starte banen på nytt ved et uhell med ett bomtrykk øverst på skjermen.
-livretry = display.newImageRect( "pausemenuretry.png", 109, 45 )
-livretry.x = livText.x
-livretry.y = livText.y + 70
+livretry = ui.knapp( hudGruppe, { tekst = "Retry", ikon = "igjen", x = ui.HOYRE - 150, y = ui.TOPP + 104,
+   bredde = 140, hoyde = 52, farge = "oransje" } )
 livretry.isVisible = false
-grp:insert( livretry )
 
 local function visRetryKnapp( event )
    if event.phase == "began" then
@@ -132,7 +127,6 @@ local function visRetryKnapp( event )
    return true
 end
 livText:addEventListener( "touch", visRetryKnapp )
-livbilde:addEventListener( "touch", visRetryKnapp )
 
 local function gjorRetry( event )
    if event.phase ~= "began" then
