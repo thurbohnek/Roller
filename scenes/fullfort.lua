@@ -52,7 +52,7 @@ function scene:create( event )
 		local ik = ui.ikon( grp, u[i] and "unge" or "ungeTom", x, ui.CY - 50, 62 )
 		ui.sprett( ik, 250 + i * 220 )
 		if nye[i] then
-			ui.tekst( grp, "Saved!", x, ui.CY - 6, 15, { farge = ui.F.gull } )
+			ui.tekst( grp, "Saved!", x, ui.CY - 4, 15, { farge = ui.F.gull } )
 		end
 	end
 	local n = framgang.antallUnger( bane )
@@ -60,8 +60,8 @@ function scene:create( event )
 		( n .. " of 3 children found in this cave" ), ui.CX, ui.CY + 20, 20, { farge = ui.F.kremDempet, fet = false } )
 	local linje = "+" .. fikk .. " leaves"
 	if bonus > 0 then linje = linje .. "   +" .. bonus .. " first-time bonus" end
-	ui.tekst( grp, linje, ui.CX, ui.CY + 50, 19, { farge = ui.F.blad } )
-	ui.pille( grp, "blad", ui.CX, ui.CY + 78, 160, tostring( framgang.draaper() ) )
+	ui.tekst( grp, linje, ui.CX, ui.CY + 46, 19, { farge = ui.F.blad } )
+	ui.pille( grp, "blad", ui.CX, ui.CY + 88, 160, tostring( framgang.draaper() ) )
 
 	local siste = not lm.anotherLevel()
 	ui.knapp( grp, { tekst = siste and "All levels" or "Next level", ikon = "spill", x = ui.CX, y = ui.CY + 150,
