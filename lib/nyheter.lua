@@ -14,6 +14,10 @@ local GGData = require( "lib.GGData" )
 local M = {}
 
 M.NYHETER = {
+	{ nr = 8, dato = "2026-10-29", linjer = {
+		"The lost children you find now roll along the ground behind you.",
+		"Pick your music in Settings: five tracks, a mix of them all, or off.",
+	} },
 	{ nr = 7, dato = "2026-10-29", linjer = {
 		"Checkpoints! Pass a flag before a hard part, and Try again starts you there.",
 		"Lost children you find now roll after you in a line, copying every move.",

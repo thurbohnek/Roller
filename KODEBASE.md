@@ -1130,13 +1130,20 @@ banen klares, når den velges i banevalget og i hjemmet.
 `lag_samling.py` (`pynt` i `samleN.lua`) og lagt bak flisene av
 `lib/samling.lua`.
 
-**Ungene som følger etter** er små kopier av marken (55 %) som spiller av
-marken sin positur fra 26, 52 og 78 bilder siden (`lib/samling.lua`).
+**Ungene som følger etter** (2026-10-29, tredje forsøk; de to første,
+avspilling av marken sin positur og en Snake-kjede langs marken sitt spor,
+ble hakkete fordi de svevde der marken hoppet): små krøllede marker som
+følger marken sin vei bortover med fast avstand og ruller på bakken.
+Høyden finnes med `physics.rayCast` rett ned, som bare teller flisene
+(`type` som begynner på "firkant"); koordinatene er lokale i kameralag 1.
+Uten bakke under (kløft) følger de marken sin bue. Glattet, ingen fysikk.
 
-**Musikk (2026-10-29):** CC0-spor fra OpenGameArt i `lyd/musikk/`
-(kilder i `lyd/musikk/KILDER.txt`), spilt av `lyd.musikk( "meny" | "eng" |
-"hule" | "arena" )` på kanal 2; hulene veksler mellom to spor.
-Naturlydene ligger svakt under på kanal 1. Egen av/på i Settings.
+**Musikk (2026-10-29):** spor fra OpenGameArt i `lyd/musikk/` (Matthew
+Pablo CC-BY 3.0, krediteres i Settings; Komiku og Zane Little CC0; kilder
+i `lyd/musikk/KILDER.txt`). Spilleren velger i Settings (av, ett spor,
+eller "mix"), lagret som `innstillinger.musikkValg()`. Det valgte sporet
+går overalt på kanal 2 og fortsetter når skjermen byttes. Naturlydene
+ligger svakt under på kanal 1.
 
 **Lyd:** `Util/grafikk/lag_lyd.py` syntetiserer alle lydene (ingen
 lisens å ta vare på) til `lyd/`. `lib/lyd.lua` spiller dem:

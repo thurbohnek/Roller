@@ -33,7 +33,7 @@ local sjekkpunkt = require( "lib.sjekkpunkt" )
 local M = {}
 
 local R_DRAAPE = 50      -- fangavstand fra sentrum av et ledd, i enheter
-local R_UNGE = 400   -- MIDLERTIDIG TEST (skal være 56)
+local R_UNGE = 56
 local NAER = 700         -- bare ting nærmere enn dette sjekkes nøye
 
 local siste = { bane = nil, draaper = 0, unger = { false, false, false } }
@@ -182,9 +182,9 @@ function M.lag( bane, camera, firkant1, deler )
 	local folgere = {}
 	local spor = {}            -- marken sin midte { x, y, s }, nyeste først; s = strekning
 	local STEG = 4
-	local FORAN = 165          -- første unge så langt bak midten av marken (langs veien)
-	local MELLOM = 46          -- avstand mellom ungene
-	local R = 15               -- ungens radius
+	local FORAN = 190          -- første unge så langt bak midten av marken (langs veien)
+	local MELLOM = 50          -- avstand mellom ungene
+	local R = 18               -- ungens radius
 	local strekning = 0
 
 	local function nyFolger()
