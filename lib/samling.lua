@@ -171,44 +171,39 @@ function M.lag( bane, camera, firkant1, deler )
 	local skitten = false
 	local sistLagret = system.getTimer()
 
-	-- Ungene som er funnet i runden, kryper etter marken på rekke, som
-	-- slangen i Snake: marken legger igjen et spor langs bakken (laveste del
-	-- av marken rett under midten, lagret hver gang den har flyttet seg litt),
-	-- og hver unge er en kjede av små ledd som ligger langs sporet bak
-	-- marken. De følger nøyaktig samme vei, står stille når marken står, og
-	-- kan ikke overlappe hverandre. Bare grafikk, ingen fysikk.
+	-- Ungene som er funnet i runden, ruller etter marken på rekke: små
+	-- krøllede marker (som ikonet) som følger marken sin vei bortover med fast
+	-- avstand, og ruller på bakken: høyden finnes med en stråle rett ned
+	-- (physics.rayCast, som bare leser og ikke påvirker noe) som bare teller
+	-- bakkeflisene. Er det ingen bakke under (en kløft), følger ungen marken
+	-- sin hoppbue gjennom lufta. Bevegelsen glattes, så ingenting hopper.
+	-- Bare grafikk, ingen fysikk. (Koordinatene er lokale i kameralaget;
+	-- prøvd i nettleseren 2026-10-29.)
 	local folgere = {}
-	local spor = {}            -- { x, y, s } nyeste først; s = strekning fra start
-	local STEG = 4             -- nytt sporpunkt når marken har flyttet seg så mye
-	local FORAN = 150          -- første unge starter så langt bak midten av marken
-	local MELLOM = 62          -- avstand mellom ungene
-	local LEDD = 6             -- ledd per unge (hale, fire ledd, hode)
-	local LEDDAVSTAND = 8.5
+	local spor = {}            -- marken sin midte { x, y, s }, nyeste først; s = strekning
+	local STEG = 4
+	local FORAN = 165          -- første unge så langt bak midten av marken (langs veien)
+	local MELLOM = 46          -- avstand mellom ungene
+	local R = 15               -- ungens radius
 	local strekning = 0
 
 	local function nyFolger()
 		local g = display.newGroup()
 		camera:add( g, 1, false )
-		g.deler = {}
-		for j = 1, LEDD do
-			local fil, b, h = "del1.png", 17, 8.5
-			if j == 1 then fil, b, h = "hale.png", 13.5, 8.5 end
-			if j == LEDD then fil, b, h = "hode.png", 15, 12.5 end
-			g.deler[j] = display.newImageRect( g, "mark/rosa/" .. fil, b, h )
-		end
-		-- hodet øverst, så det ikke dekkes av leddet bak
-		g.deler[LEDD]:toFront()
+		local bilde = ui.ikon( g, "unge", 0, 0, R * 2.3 )
+		g.bilde = bilde
+		g.x, g.y = deler[9].x or 0, deler[9].y or 0
 		-- rett bak marken i tegnerekkefølgen, ikke oppå den
 		local lag = deler[1].parent
 		for i = 1, lag.numChildren do
 			if lag[i] == deler[1] then lag:insert( i, g ) break end
 		end
-		g.alpha = 0
-		transition.to( g, { time = 400, alpha = 1 } )
+		g.xScale, g.yScale = 0.2, 0.2
+		transition.to( g, { time = 350, xScale = 1, yScale = 1, transition = easing.outBack } )
 		folgere[#folgere + 1] = g
 	end
 
-	-- Punktet på sporet som ligger d enheter bak det nyeste.
+	-- Punktet på marken sin vei som ligger d enheter bak det nyeste.
 	local function punktBak( d )
 		if #spor == 0 then return nil end
 		local maal = spor[1].s - d
@@ -219,21 +214,24 @@ function M.lag( bane, camera, firkant1, deler )
 				return a.x + ( b.x - a.x ) * t, a.y + ( b.y - a.y ) * t
 			end
 		end
-		local siste = spor[#spor]
-		return siste.x, siste.y
+		return spor[#spor].x, spor[#spor].y
+	end
+
+	-- Bakken rett under (x, y): punkt og normal, eller nil. Teller bare flisene.
+	local function bakkeUnder( x, y )
+		local treff = physics.rayCast( x, y - 80, x, y + 420, "sorted" )
+		if not treff then return nil end
+		for _, h in ipairs( treff ) do
+			local t = h.object and h.object.type
+			if t and string.sub( t, 1, 7 ) == "firkant" then
+				return h.position.x, h.position.y, h.normal.x, h.normal.y
+			end
+		end
 	end
 
 	local function oppdaterFolgere()
 		if not ( deler[5].x and deler[9].x ) then return end
-		-- bakken under marken: laveste ledd nær midten (virker både når marken
-		-- er en ring og når den er strukket ut i en bakke)
-		local cx = deler[5].x
-		local lav = deler[5].y
-		for i = 1, 9 do
-			local d = deler[i]
-			if math.abs( d.x - cx ) < 26 and d.y > lav then lav = d.y end
-		end
-		local px, py = cx, lav + 4      -- ungen (8,5 tykk) ligger på samme bakke som det laveste leddet
+		local px, py = deler[5].x, deler[5].y
 		local forrige = spor[1]
 		if not forrige then
 			spor[1] = { x = px, y = py, s = 0 }
@@ -247,24 +245,26 @@ function M.lag( bane, camera, firkant1, deler )
 				while #spor > 2 and spor[1].s - spor[#spor - 1].s > trengs do spor[#spor] = nil end
 			end
 		end
+		if #folgere == 0 then return end
 		for k, g in ipairs( folgere ) do
 			if g.parent then
-				local start = FORAN + ( k - 1 ) * MELLOM
-				for j = 1, LEDD do
-					local d = start + ( j - 1 ) * LEDDAVSTAND
-					local x1, y1 = punktBak( d - 3 )
-					local x2, y2 = punktBak( d + 3 )
-					if x1 then
-						local led = g.deler[j]
-						-- litt krypebølge, som går bakover når ungen beveger seg
-						local bolge = math.sin( ( strekning - d ) * 0.12 ) * 1.6
-						local vx, vy = x1 - x2, y1 - y2
-						local l = math.sqrt( vx * vx + vy * vy )
-						if l < 0.001 then vx, vy, l = 1, 0, 1 end
-						led.x = ( x1 + x2 ) / 2 - vy / l * bolge
-						led.y = ( y1 + y2 ) / 2 + vx / l * bolge
-						led.rotation = math.deg( math.atan2( vy, vx ) )
+				local tx, ty = punktBak( FORAN + ( k - 1 ) * MELLOM )
+				if tx then
+					local gx, gy, nx, ny = bakkeUnder( tx, ty )
+					local mx, my
+					if gx and ny < -0.3 then
+						mx, my = gx + nx * R, gy + ny * R      -- på bakken
+					else
+						mx, my = tx, ty                         -- i lufta: marken sin bue
 					end
+					-- glatt: ikke hopp
+					local nyX = g.x + ( mx - g.x ) * 0.35
+					local nyY = g.y + ( my - g.y ) * 0.35
+					-- rull etter strekningen
+					local dx, dy = nyX - g.x, nyY - g.y
+					local fart = math.sqrt( dx * dx + dy * dy ) * ( dx >= 0 and 1 or -1 )
+					g.bilde.rotation = g.bilde.rotation + math.deg( fart / R )
+					g.x, g.y = nyX, nyY
 				end
 			end
 		end
@@ -342,25 +342,6 @@ function M.lag( bane, camera, firkant1, deler )
 			if not f.nadd and mx > f.x + 40 then nadd( i ) end
 		end
 		oppdaterFolgere()
-		-- MIDLERTIDIG PROBE
-		do
-			local d = deler[5]
-			local h1 = physics.rayCast( d.x, d.y - 20, d.x, d.y + 600, "closest" )
-			local cx, cy = d:localToContent( 0, 0 )
-			local cx2, cy2 = d.parent:localToContent( d.x, d.y + 600 )
-			local h2 = physics.rayCast( cx, cy - 20, cx2, cy2, "closest" )
-			_G.P1 = _G.P1 or display.newCircle( 0, 0, 14 )
-			_G.P2 = _G.P2 or display.newCircle( 0, 0, 10 )
-			if not _G.P1.lagt then camera:add( _G.P1, 1, false ); camera:add( _G.P2, 1, false ); _G.P1.lagt = true end
-			_G.P1:setFillColor( 1, 0, 0 ); _G.P2:setFillColor( 0, 0.4, 1 )
-			_G.P1.isVisible, _G.P2.isVisible = false, false
-			if h1 and h1[1] then _G.P1.x, _G.P1.y = h1[1].position.x, h1[1].position.y; _G.P1.isVisible = true end
-			if h2 and h2[1] then
-				local lx, ly = d.parent:contentToLocal( h2[1].position.x, h2[1].position.y )
-				_G.P2.x, _G.P2.y = lx, ly; _G.P2.isVisible = true
-			end
-			_G.P1:toFront(); _G.P2:toFront()
-		end
 		for _, t in ipairs( ting ) do
 			if not t.tatt and t.obj.parent then
 				local dx, dy = t.x - mx, t.y - my
