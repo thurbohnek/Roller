@@ -22,6 +22,7 @@
 --         { del1, del2, del3, del4, del5, del6, del7, del8, del9 } )
 
 local ui = require( "lib.ui" )
+local physics = require( "physics" )
 local hud = require( "lib.hud" )
 local framgang = require( "lib.framgang" )
 local oppgradering = require( "lib.oppgradering" )
@@ -341,6 +342,17 @@ function M.lag( bane, camera, firkant1, deler )
 			if not f.nadd and mx > f.x + 40 then nadd( i ) end
 		end
 		oppdaterFolgere()
+		-- MIDLERTIDIG PROBE
+		if not _G.PROBE_T or tid - _G.PROBE_T > 2000 then
+			_G.PROBE_T = tid
+			local d = deler[5]
+			local h1 = physics.rayCast( d.x, d.y - 20, d.x, d.y + 600, "closest" )
+			local cx, cy = d:localToContent( 0, 0 )
+			local cx2, cy2 = d.parent:localToContent( d.x, d.y + 600 )
+			local h2 = physics.rayCast( cx, cy - 20, cx2, cy2, "closest" )
+			print( "PROBE lokal " .. d.x .. "," .. d.y .. " -> " .. ( h1 and h1[1] and ( h1[1].object.type or "?" ) .. " " .. h1[1].position.x .. "," .. h1[1].position.y or "ingen" ) )
+			print( "PROBE innhold " .. cx .. "," .. cy .. " -> " .. ( h2 and h2[1] and ( h2[1].object.type or "?" ) .. " " .. h2[1].position.x .. "," .. h2[1].position.y or "ingen" ) )
+		end
 		for _, t in ipairs( ting ) do
 			if not t.tatt and t.obj.parent then
 				local dx, dy = t.x - mx, t.y - my
