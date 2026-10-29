@@ -343,15 +343,23 @@ function M.lag( bane, camera, firkant1, deler )
 		end
 		oppdaterFolgere()
 		-- MIDLERTIDIG PROBE
-		if not _G.PROBE_T or tid - _G.PROBE_T > 2000 then
-			_G.PROBE_T = tid
+		do
 			local d = deler[5]
 			local h1 = physics.rayCast( d.x, d.y - 20, d.x, d.y + 600, "closest" )
 			local cx, cy = d:localToContent( 0, 0 )
 			local cx2, cy2 = d.parent:localToContent( d.x, d.y + 600 )
 			local h2 = physics.rayCast( cx, cy - 20, cx2, cy2, "closest" )
-			print( "PROBE lokal " .. d.x .. "," .. d.y .. " -> " .. ( h1 and h1[1] and ( h1[1].object.type or "?" ) .. " " .. h1[1].position.x .. "," .. h1[1].position.y or "ingen" ) )
-			print( "PROBE innhold " .. cx .. "," .. cy .. " -> " .. ( h2 and h2[1] and ( h2[1].object.type or "?" ) .. " " .. h2[1].position.x .. "," .. h2[1].position.y or "ingen" ) )
+			_G.P1 = _G.P1 or display.newCircle( 0, 0, 14 )
+			_G.P2 = _G.P2 or display.newCircle( 0, 0, 10 )
+			if not _G.P1.lagt then camera:add( _G.P1, 1, false ); camera:add( _G.P2, 1, false ); _G.P1.lagt = true end
+			_G.P1:setFillColor( 1, 0, 0 ); _G.P2:setFillColor( 0, 0.4, 1 )
+			_G.P1.isVisible, _G.P2.isVisible = false, false
+			if h1 and h1[1] then _G.P1.x, _G.P1.y = h1[1].position.x, h1[1].position.y; _G.P1.isVisible = true end
+			if h2 and h2[1] then
+				local lx, ly = d.parent:contentToLocal( h2[1].position.x, h2[1].position.y )
+				_G.P2.x, _G.P2.y = lx, ly; _G.P2.isVisible = true
+			end
+			_G.P1:toFront(); _G.P2:toFront()
 		end
 		for _, t in ipairs( ting ) do
 			if not t.tatt and t.obj.parent then
