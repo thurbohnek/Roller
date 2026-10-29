@@ -20,6 +20,30 @@ function scene:create( event )
 	-- tre lydknapper: all lyd, musikken, naturlydene
 	local knapper = {}
 	local tegn
+
+	-- musikkvelger: hvert trykk går til neste valg og spiller det med en gang
+	local lyd = require( "lib.lyd" )
+	local VALG = { "av" }
+	for _, sp in ipairs( lyd.SPOR ) do VALG[#VALG + 1] = sp.id end
+	VALG[#VALG + 1] = "mix"
+	local function navn( v )
+		if v == "av" then return "Music: Off" end
+		if v == "mix" then return "Music: Mix of all" end
+		for _, sp in ipairs( lyd.SPOR ) do if sp.id == v then return "Music: " .. sp.navn end end
+		return "Music"
+	end
+	local function tegnMusikk()
+		if knapper[2] then display.remove( knapper[2] ) end
+		local v = innstillinger.musikkValg()
+		local paa = v ~= "av" and innstillinger.lydPaa()
+		knapper[2] = ui.knapp( grp, { tekst = navn( v ), ikon = paa and "lyd" or "lydAv", x = ui.CX, y = ui.CY - 52,
+			bredde = 340, hoyde = 54, farge = paa and "gronn" or "gra", storrelse = 20, trykk = function()
+				local nr = 1
+				for i, x in ipairs( VALG ) do if x == v then nr = i end end
+				innstillinger.settMusikk( VALG[nr % #VALG + 1] )
+				tegnMusikk()
+			end } )
+	end
 	local function bryter( nr, y, tekstPaa, tekstAv, erPaa, bytt )
 		if knapper[nr] then display.remove( knapper[nr] ) end
 		local paa = erPaa()
@@ -33,7 +57,7 @@ function scene:create( event )
 	end
 	tegn = function()
 		bryter( 1, ui.CY - 114, "Sound: On", "Sound: Off", innstillinger.lydPaa, innstillinger.byttLyd )
-		bryter( 2, ui.CY - 52, "Music: On", "Music: Off", innstillinger.musikkPaa, innstillinger.byttMusikk )
+		tegnMusikk()
 		bryter( 3, ui.CY + 10, "Nature sounds: On", "Nature sounds: Off", innstillinger.naturPaa,
 			innstillinger.byttNatur )
 	end
@@ -42,7 +66,7 @@ function scene:create( event )
 	ui.knapp( grp, { tekst = "How to move", ikon = "hjelp", x = ui.CX, y = ui.CY + 76, bredde = 340, hoyde = 54,
 		farge = "bla", storrelse = 22, trykk = function() require( "lib.kontroller" ).vis( grp ) end } )
 
-	ui.tekst( grp, "Music: MintoDog, Zane Little and cynicmusic (CC0, OpenGameArt)", ui.CX, ui.CY + 126, 14,
+	ui.tekst( grp, "Music: Matthew Pablo (CC-BY 3.0), Komiku and Zane Little (CC0), via OpenGameArt", ui.CX, ui.CY + 126, 14,
 		{ farge = ui.F.kremDempet, fet = false } )
 	ui.tekst( grp, "Font: Fredoka (SIL Open Font License)", ui.CX, ui.CY + 146, 14,
 		{ farge = ui.F.kremDempet, fet = false } )

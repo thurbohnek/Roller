@@ -1,14 +1,15 @@
-Musikken i Roller. Alle sporene er CC0 (fri, ingen krav om kreditering),
-hentet fra OpenGameArt 2026-10-28. Lydstyrken er jevnet ut (loudnorm -18 LUFS)
-og filene er gjort om til mp3 96 kbit/s.
+Musikken i Roller, hentet fra OpenGameArt 2026-10-29. Lydstyrken er jevnet
+ut (loudnorm -18 LUFS) og filene er gjort om til mp3 64 kbit/s.
+Spilleren velger spor i Settings (lib/lyd.lua, scenes/innstillinger.lua).
 
-meny.mp3   "Cozy Puzzle Title" av MintoDog (loopbar)
-           https://opengameart.org/content/cozy-puzzle-title
-eng.mp3    "Apple Cider" av Zane Little Music
-           https://opengameart.org/content/apple-cider
-hule1.mp3  "Crystal Cave" (song18) av cynicmusic
-           https://opengameart.org/content/crystal-cave-song18
-hule2.mp3  "Mysterious Ambience" (song21) av cynicmusic
-           https://opengameart.org/content/mysterious-ambience-song21
-arena.mp3  "Cozy Puzzle Stage Select" av MintoDog (loopbar)
-           https://opengameart.org/content/cozy-puzzle-stage-select
+critters.mp3  "Curious Critters" (Extended) av Matthew Pablo, CC-BY 3.0
+              https://opengameart.org/content/curious-critters
+              (CC-BY: må krediteres; står i Settings)
+creek.mp3     "Pleasant Creek" av Matthew Pablo, CC-BY 3.0
+              https://opengameart.org/content/pleasant-creek
+river.mp3     "Down the River" av Komiku (Loyalty Freak Music), CC0
+              https://opengameart.org/content/down-the-river
+chill.mp3     "Chill Out Theme" av Komiku (Loyalty Freak Music), CC0
+              https://opengameart.org/content/chill-out-theme
+cider.mp3     "Apple Cider" av Zane Little Music, CC0
+              https://opengameart.org/content/apple-cider

@@ -69,53 +69,66 @@ function M.bakgrunn( navn )
 end
 
 -- ---------------------------------------------------------- musikk
--- Lydspor (CC0, se lyd/musikk/KILDER.txt) på kanal 2. Hvert område har en
--- spilleliste som går i ring; hulene veksler mellom to spor.
---     lyd.musikk( "meny" | "eng" | "hule" | "arena" )
+-- Lydspor på kanal 2 (kilder og lisenser i lyd/musikk/KILDER.txt).
+-- Spilleren velger spor i Settings; det valgte sporet går overalt og
+-- fortsetter når skjermen byttes. "mix" spiller alle etter hverandre.
 local MUSIKK_KANAL = 2
-local LISTER = {
-	meny = { "meny" },
-	eng = { "eng" },
-	hule = { "hule1", "hule2" },
-	arena = { "arena" },
+M.SPOR = {
+	{ id = "critters", navn = "Curious Critters", av = "Matthew Pablo" },
+	{ id = "creek", navn = "Pleasant Creek", av = "Matthew Pablo" },
+	{ id = "river", navn = "Down the River", av = "Komiku" },
+	{ id = "chill", navn = "Chill Out", av = "Komiku" },
+	{ id = "cider", navn = "Apple Cider", av = "Zane Little" },
 }
 local lastetMusikk = {}
-local omraade, spor, nr = nil, nil, 1
+local spiller          -- id på sporet som spilles nå
 
-local function spillNeste()
-	if not ( innstillinger.lydPaa() and innstillinger.musikkPaa() ) or not omraade then return end
-	local liste = LISTER[omraade]
-	nr = ( nr % #liste ) + 1
-	local navn = liste[nr]
-	if lastetMusikk[navn] == nil then
-		local ok, snd = pcall( audio.loadStream, "lyd/musikk/" .. navn .. ".mp3" )
-		lastetMusikk[navn] = ok and snd or false
+local function hentMusikk( id )
+	if lastetMusikk[id] == nil then
+		local ok, snd = pcall( audio.loadStream, "lyd/musikk/" .. id .. ".mp3" )
+		lastetMusikk[id] = ok and snd or false
 	end
-	local snd = lastetMusikk[navn]
-	if not snd then return end
-	audio.setVolume( 0.45, { channel = MUSIKK_KANAL } )
-	pcall( audio.play, snd, { channel = MUSIKK_KANAL, fadein = 800, onComplete = function( e )
-		-- neste spor når dette er ferdig (ikke når det ble stoppet)
-		if e.completed and spor == navn then spillNeste() end
-	end } )
-	spor = navn
+	return lastetMusikk[id]
 end
 
-function M.musikk( navn )
-	if navn == omraade and spor and audio.isChannelActive( MUSIKK_KANAL ) then return end
-	omraade = navn or omraade
-	spor = nil
+local function spill( id )
+	local snd = hentMusikk( id )
+	if not snd then return end
+	local mix = innstillinger.musikkValg() == "mix"
 	audio.stop( MUSIKK_KANAL )
-	nr = 0
-	if not ( innstillinger.lydPaa() and innstillinger.musikkPaa() ) then return end
-	spillNeste()
+	audio.setVolume( 0.45, { channel = MUSIKK_KANAL } )
+	spiller = id
+	pcall( audio.play, snd, { channel = MUSIKK_KANAL, fadein = 800, loops = mix and 0 or -1,
+		onComplete = function( e )
+			-- i mix: neste spor når dette er ferdig (ikke når det ble stoppet)
+			if e.completed and spiller == id and innstillinger.musikkValg() == "mix" then
+				local nr = 1
+				for i, sp in ipairs( M.SPOR ) do if sp.id == id then nr = i end end
+				spill( M.SPOR[nr % #M.SPOR + 1].id )
+			end
+		end } )
+end
+
+-- Sørger for at riktig musikk spilles. Kalles fra skjermene (navnet på
+-- området brukes ikke lenger, men står igjen så kallene er lesbare).
+function M.musikk()
+	local valg = innstillinger.musikkValg()
+	if not innstillinger.lydPaa() or valg == "av" then
+		audio.stop( MUSIKK_KANAL )
+		spiller = nil
+		return
+	end
+	if spiller and audio.isChannelActive( MUSIKK_KANAL ) and ( valg == "mix" or valg == spiller ) then
+		return
+	end
+	spill( valg == "mix" and M.SPOR[1].id or valg )
 end
 
 -- Kalles når lyd, musikk eller naturlyder slås av eller på.
 function M.oppdaterBakgrunn()
 	M.spiller = nil
 	M.bakgrunn()
-	spor = nil
+	spiller = nil
 	M.musikk()
 end
 

@@ -28,16 +28,23 @@ function M.byttLyd()
 	data:save()
 	M.brukLyd()
 	require( "lib.lyd" ).oppdaterBakgrunn()
-	-- Musikken (lydsporet), av/på for seg.
-function M.musikkPaa()
-	return data.musikk ~= false
+	-- Musikken: "av", "mix" eller id-en til et spor (lib/lyd.lua M.SPOR).
+-- Standard er "critters". (Fram til 2026-10-29 var det bare av/på i
+-- data.musikk; false der betyr av.)
+function M.musikkValg()
+	if data.musikkValg then return data.musikkValg end
+	if data.musikk == false then return "av" end
+	return "critters"
 end
 
-function M.byttMusikk()
-	data.musikk = not M.musikkPaa()
+function M.musikkPaa()
+	return M.musikkValg() ~= "av"
+end
+
+function M.settMusikk( valg )
+	data.musikkValg = valg
 	data:save()
 	require( "lib.lyd" ).oppdaterBakgrunn()
-	return M.musikkPaa()
 end
 
 -- Naturlydene i bakgrunnen (vind, fugler, drypp), av/på for seg.
@@ -55,16 +62,23 @@ end
 return M.lydPaa()
 end
 
--- Musikken (lydsporet), av/på for seg.
-function M.musikkPaa()
-	return data.musikk ~= false
+-- Musikken: "av", "mix" eller id-en til et spor (lib/lyd.lua M.SPOR).
+-- Standard er "critters". (Fram til 2026-10-29 var det bare av/på i
+-- data.musikk; false der betyr av.)
+function M.musikkValg()
+	if data.musikkValg then return data.musikkValg end
+	if data.musikk == false then return "av" end
+	return "critters"
 end
 
-function M.byttMusikk()
-	data.musikk = not M.musikkPaa()
+function M.musikkPaa()
+	return M.musikkValg() ~= "av"
+end
+
+function M.settMusikk( valg )
+	data.musikkValg = valg
 	data:save()
 	require( "lib.lyd" ).oppdaterBakgrunn()
-	return M.musikkPaa()
 end
 
 -- Naturlydene i bakgrunnen (vind, fugler, drypp), av/på for seg.

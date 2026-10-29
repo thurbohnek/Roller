@@ -32,7 +32,7 @@ local sjekkpunkt = require( "lib.sjekkpunkt" )
 local M = {}
 
 local R_DRAAPE = 50      -- fangavstand fra sentrum av et ledd, i enheter
-local R_UNGE = 56
+local R_UNGE = 400   -- MIDLERTIDIG TEST (skal være 56)
 local NAER = 700         -- bare ting nærmere enn dette sjekkes nøye
 
 local siste = { bane = nil, draaper = 0, unger = { false, false, false } }
@@ -170,30 +170,34 @@ function M.lag( bane, camera, firkant1, deler )
 	local skitten = false
 	local sistLagret = system.getTimer()
 
-	-- Ungene som er funnet i runden, følger etter marken på rekke: små
-	-- kopier av marken (alle ni ledd) som spiller av nøyaktig det marken
-	-- gjorde litt tidligere, samme vei, samme rulling og strekking. Bare
-	-- grafikk, ingen fysikk.
+	-- Ungene som er funnet i runden, kryper etter marken på rekke, som
+	-- slangen i Snake: marken legger igjen et spor langs bakken (laveste del
+	-- av marken rett under midten, lagret hver gang den har flyttet seg litt),
+	-- og hver unge er en kjede av små ledd som ligger langs sporet bak
+	-- marken. De følger nøyaktig samme vei, står stille når marken står, og
+	-- kan ikke overlappe hverandre. Bare grafikk, ingen fysikk.
 	local folgere = {}
-	local spor = {}            -- marken sin positur langs veien (nyeste først)
-	local STEG = 6             -- ny positur lagres når midten har flyttet seg så mye
-	local AVSTAND = 24         -- posturer mellom hver i rekka (ca. 140 enheter)
-	local SKALA = 0.55         -- ungene er litt over halvparten så store
-	local BILDER = { { "hale.png", 27, 17 } }
-	for i = 2, 8 do BILDER[i] = { "del1.png", 34, 17 } end
-	BILDER[9] = { "hode.png", 30, 25 }
+	local spor = {}            -- { x, y, s } nyeste først; s = strekning fra start
+	local STEG = 4             -- nytt sporpunkt når marken har flyttet seg så mye
+	local FORAN = 150          -- første unge starter så langt bak midten av marken
+	local MELLOM = 62          -- avstand mellom ungene
+	local LEDD = 6             -- ledd per unge (hale, fire ledd, hode)
+	local LEDDAVSTAND = 8.5
+	local strekning = 0
 
 	local function nyFolger()
 		local g = display.newGroup()
 		camera:add( g, 1, false )
 		g.deler = {}
-		for i = 1, 9 do
-			local b = BILDER[i]
-			local d = display.newImageRect( g, "mark/rosa/" .. b[1], b[2] * SKALA, b[3] * SKALA )
-			d.isVisible = false
-			g.deler[i] = d
+		for j = 1, LEDD do
+			local fil, b, h = "del1.png", 17, 8.5
+			if j == 1 then fil, b, h = "hale.png", 13.5, 8.5 end
+			if j == LEDD then fil, b, h = "hode.png", 15, 12.5 end
+			g.deler[j] = display.newImageRect( g, "mark/rosa/" .. fil, b, h )
 		end
-		-- rett bak marken (bak halen), ikke oppå den
+		-- hodet øverst, så det ikke dekkes av leddet bak
+		g.deler[LEDD]:toFront()
+		-- rett bak marken i tegnerekkefølgen, ikke oppå den
 		local lag = deler[1].parent
 		for i = 1, lag.numChildren do
 			if lag[i] == deler[1] then lag:insert( i, g ) break end
@@ -203,17 +207,65 @@ function M.lag( bane, camera, firkant1, deler )
 		folgere[#folgere + 1] = g
 	end
 
-	-- Tegner ungen g i marken sin positur fra n bilder siden: leddene samles
-	-- rundt midten (ledd 5) og flyttes litt ned, så den lille marken står på
-	-- bakken der den store sto.
-	local function tegnFolger( g, positur )
-		local mx, my = positur[5][1], positur[5][2] + ( 1 - SKALA ) * 32
+	-- Punktet på sporet som ligger d enheter bak det nyeste.
+	local function punktBak( d )
+		if #spor == 0 then return nil end
+		local maal = spor[1].s - d
+		for i = 1, #spor - 1 do
+			local a, b = spor[i], spor[i + 1]
+			if b.s <= maal then
+				local t = ( a.s - b.s ) > 0 and ( a.s - maal ) / ( a.s - b.s ) or 0
+				return a.x + ( b.x - a.x ) * t, a.y + ( b.y - a.y ) * t
+			end
+		end
+		local siste = spor[#spor]
+		return siste.x, siste.y
+	end
+
+	local function oppdaterFolgere()
+		if not ( deler[5].x and deler[9].x ) then return end
+		-- bakken under marken: laveste ledd nær midten (virker både når marken
+		-- er en ring og når den er strukket ut i en bakke)
+		local cx = deler[5].x
+		local lav = deler[5].y
 		for i = 1, 9 do
-			local p, d = positur[i], g.deler[i]
-			d.x = mx + ( p[1] - positur[5][1] ) * SKALA
-			d.y = my + ( p[2] - positur[5][2] ) * SKALA
-			d.rotation = p[3]
-			d.isVisible = true
+			local d = deler[i]
+			if math.abs( d.x - cx ) < 26 and d.y > lav then lav = d.y end
+		end
+		local px, py = cx, lav + 4      -- ungen (8,5 tykk) ligger på samme bakke som det laveste leddet
+		local forrige = spor[1]
+		if not forrige then
+			spor[1] = { x = px, y = py, s = 0 }
+		else
+			local dx, dy = px - forrige.x, py - forrige.y
+			local l = math.sqrt( dx * dx + dy * dy )
+			if l >= STEG then
+				strekning = strekning + l
+				table.insert( spor, 1, { x = px, y = py, s = strekning } )
+				local trengs = FORAN + MELLOM * 3 + 40
+				while #spor > 2 and spor[1].s - spor[#spor - 1].s > trengs do spor[#spor] = nil end
+			end
+		end
+		for k, g in ipairs( folgere ) do
+			if g.parent then
+				local start = FORAN + ( k - 1 ) * MELLOM
+				for j = 1, LEDD do
+					local d = start + ( j - 1 ) * LEDDAVSTAND
+					local x1, y1 = punktBak( d - 3 )
+					local x2, y2 = punktBak( d + 3 )
+					if x1 then
+						local led = g.deler[j]
+						-- litt krypebølge, som går bakover når ungen beveger seg
+						local bolge = math.sin( ( strekning - d ) * 0.12 ) * 1.6
+						local vx, vy = x1 - x2, y1 - y2
+						local l = math.sqrt( vx * vx + vy * vy )
+						if l < 0.001 then vx, vy, l = 1, 0, 1 end
+						led.x = ( x1 + x2 ) / 2 - vy / l * bolge
+						led.y = ( y1 + y2 ) / 2 + vx / l * bolge
+						led.rotation = math.deg( math.atan2( vy, vx ) )
+					end
+				end
+			end
 		end
 	end
 
@@ -288,22 +340,7 @@ function M.lag( bane, camera, firkant1, deler )
 		for i, f in ipairs( flagg ) do
 			if not f.nadd and mx > f.x + 40 then nadd( i ) end
 		end
-		-- følgerne
-		if deler[1].x and deler[9].x then
-			local siste = spor[1]
-			local dx = siste and ( deler[5].x - siste[5][1] ) or STEG
-			local dy = siste and ( deler[5].y - siste[5][2] ) or 0
-			if dx * dx + dy * dy >= STEG * STEG then
-				local positur = {}
-				for i = 1, 9 do positur[i] = { deler[i].x, deler[i].y, deler[i].rotation } end
-				table.insert( spor, 1, positur )
-				if #spor > AVSTAND * 3 + 1 then spor[#spor] = nil end
-			end
-			for k, g in ipairs( folgere ) do
-				local positur = spor[math.min( #spor, k * AVSTAND )]
-				if positur and g.parent then tegnFolger( g, positur ) end
-			end
-		end
+		oppdaterFolgere()
 		for _, t in ipairs( ting ) do
 			if not t.tatt and t.obj.parent then
 				local dx, dy = t.x - mx, t.y - my
